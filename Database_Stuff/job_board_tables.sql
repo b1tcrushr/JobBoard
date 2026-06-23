@@ -1,3 +1,7 @@
+-- Create Database
+CREATE DATABASE IF NOT EXISTS job_coop_portal;
+USE job_coop_portal;
+
 -- create company table first so other tables can use it
 CREATE TABLE company (
     company_id INT PRIMARY KEY,
