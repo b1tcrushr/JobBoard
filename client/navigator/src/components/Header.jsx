@@ -5,17 +5,26 @@ function Header() {
 
     return (
         <header className="header">
-            <div className="box-content">
-                <h1>Navigator</h1>
-                <h5>Navigator clone</h5>
+
+            <div className="header-left">
+                <div>💼</div>
+                <h2>Navigator</h2>
             </div>
-            <nav className="nav-content">
-                <Link to="/">Job Search</Link>
+
+
+            <nav className="header-center">
+                <Link to="/">Home</Link>
                 <p> | </p>
-                <Link to="/">My jobs</Link>
+                <Link to="/">Jobs</Link>
                 <p> | </p>
-                <button className="common-button">Login / Register</button>
+                <Link to="/">Applications</Link>
             </nav>
+
+            <div className="header-right">
+                <div className="profile">M</div>
+                <button className="common-button">Login / Register</button>
+
+            </div>
 
         </header>
     )

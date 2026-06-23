@@ -4,23 +4,45 @@
     justify-content: space-between;
     font-size: 16px;
     background: #50586C;
-    padding: 10px;
+    padding: 10px;      
 }
 
-.box-content {
+
+.header-left {
     display: flex;
     align-items: center;
-    gap: 5px; 
+    gap: 14px;
 }
 
-.nav-content {
+.header-right {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 16px;
 }
-
-.nav-content a {
+.header-center {
+    display: flex;
+    align-items: center;
+    gap: 34px;
+}
+.header-center a {
+    color: black; 
     text-decoration: none;
-    color: inherit;
+    font-weight: 600;
+    transition: color 0.2s ease;
 }
 
+.header-center a:hover {
+    color: #bcd4ff;
+}
+
+.profile {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    color: #334155;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

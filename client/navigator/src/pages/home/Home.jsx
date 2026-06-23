@@ -3,16 +3,38 @@ import "../../styles/home.css"
 
 
 function Home() {
-    const bubbleMinWidth = 200;
-    const bubbleMinHeight= 200;
+    const bubbleMinHeight= 140;
 
     return (
-        <div>
-            <h1>Home page</h1>
+        <div className="container">
+            <h1>Quick Stats</h1>
             <div className="bubbles-container">
-                <DisplayBubble borderColour='#33fc54' bgColour='#6af48f' textColour='white' title='Interviews scheduled' content='content' width={bubbleMinWidth} height={bubbleMinHeight}/>
-                <DisplayBubble borderColour='#e24343' bgColour='#dc7d7d' textColour='white' title='Not Selected' content='content' width={bubbleMinWidth} height={bubbleMinHeight}/>
+                <DisplayBubble
+                    borderColour="#cfe2ff"
+                    bgColour="#eef5ff"
+                    textColour="#2563eb"
+                    icon="✈️"
+                    stat="26"
+                    title="Applications Sent"
+                    height={bubbleMinHeight}/>
 
+                    <DisplayBubble
+                    borderColour="#ccefd8"
+                    bgColour="#edf9f1"
+                    textColour="#16a34a"
+                    icon="📅"
+                    stat="2"
+                    title="Interviews Scheduled"
+                    height={bubbleMinHeight}/>
+
+                    <DisplayBubble
+                    borderColour="#f4d1d1"
+                    bgColour="#fff1f1"
+                    textColour="#ef4444"
+                    icon="✖"
+                    stat="6"
+                    title="Not Selected"
+                    height={bubbleMinHeight}/>
             </div>
         </div>
     )
