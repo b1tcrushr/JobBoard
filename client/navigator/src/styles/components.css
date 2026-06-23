@@ -1,1 +1,24 @@
 
+.displayBubble {
+    display: grid;
+    justify-content: center;
+    width: fit-content;
+
+    border: 3px solid black;
+    border-radius: 20px;
+    padding: 15px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    text-align: center;     
+}
+
+
+.displayBubble h2 {
+    margin: 0;
+}
+
+.displayBubble p {
+    margin: auto 0;
+}
