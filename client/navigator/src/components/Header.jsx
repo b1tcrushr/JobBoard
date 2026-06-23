@@ -1,6 +1,8 @@
 import "../styles/header.css"
+import "../styles/common.css"
 import { Link } from "react-router-dom";
 function Header() {
+
     return (
         <header className="header">
             <div className="box-content">
@@ -11,6 +13,8 @@ function Header() {
                 <Link to="/">Job Search</Link>
                 <p> | </p>
                 <Link to="/">My jobs</Link>
+                <p> | </p>
+                <button className="common-button">Login / Register</button>
             </nav>
 
         </header>

@@ -9,7 +9,7 @@ function App() {
     <div className="app-container">
       <Header />
       {/* define routes here */}
-      <main>
+      <main className="main-content">
         <Routes>
           <Route path="/" element={<Home />} />
         </Routes>
