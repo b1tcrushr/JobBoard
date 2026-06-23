@@ -1,5 +1,4 @@
-
-.header {
+.footer {
     display: flex;
     justify-content: space-between;
     font-size: 15px;
@@ -12,15 +11,3 @@
     align-items: center;
     gap: 5px; 
 }
-
-.nav-content {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.nav-content a {
-    text-decoration: none;
-    color: inherit;
-}
-

@@ -1,10 +1,11 @@
 import "../styles/footer.css"
 
-
 function Footer() {
     return (
-        <footer>
-            
+        <footer className="footer">
+            <div className="box-content">
+                <h5>Navigator clone</h5>
+            </div>
         </footer>
     )
 }
