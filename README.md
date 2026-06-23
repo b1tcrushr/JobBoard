@@ -62,7 +62,7 @@ A centralized web portal connecting university students + recent graduates with 
 |---|---|
 | Frontend | TBD |
 | Backend | TBD |
-| Database | TBD |
+| Database | MySQL |
 | Authentication | TBD |
 | Hosting | TBD |
 
