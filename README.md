@@ -86,7 +86,9 @@ git clone https://github.com/b1tcrushr/JobBoard
 cd YOUR_REPO
 
 # install dependencies
-# ...
+# cd client
+# npm i (install node dependencies)
+# npm run dev (start the client)
 
 # config environment variables
 cp .env.example .env
@@ -108,8 +110,8 @@ cp .env.example .env
 
 ```
 /
-├── frontend/         # client-side code
-├── backend/          # server-side code + API
+├── client/         # client-side code
+├── server/          # server-side code + API
 ├── database/         # schema, migrations + seed data
 ├── docs/             # design documents, wireframes + meeting notes
 └── README.md
