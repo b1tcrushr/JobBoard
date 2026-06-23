@@ -1,11 +1,34 @@
 import "../../styles/components.css"
 
-
-function DisplayBubble(props) {
+function DisplayBubble({
+  borderColour,
+  bgColour,
+  textColour,
+  width = "100%",
+  height,
+  icon,
+  stat,
+  title,
+  subtitle
+}) {
   return (
-    <div className="displayBubble" style={{ borderColor: props.borderColour, backgroundColor: props.bgColour, color: props.textColour, width: props.width, height: props.height }}>      
-        <h2>{props.title}</h2>
-        <p>{props.content}</p>
+    <div
+      className="displayBubble"
+      style={{
+        borderColor: borderColour,
+        backgroundColor: bgColour,
+        color: textColour,
+        width,
+        height
+      }}
+    >
+      <div className="bubbleIcon">{icon}</div>
+
+      <div className="bubbleText">
+        <h2>{stat}</h2>
+        <h3>{title}</h3>
+        <p>{subtitle}</p>
+      </div>
     </div>
   );
 }
