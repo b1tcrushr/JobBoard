@@ -3,48 +3,61 @@ CREATE DATABASE IF NOT EXISTS job_coop_portal;
 USE job_coop_portal;
 
 -- create company table first so other tables can use it
-CREATE TABLE company (
-    company_id INT PRIMARY KEY,
+CREATE TABLE companies (
+    company_id INT PRIMARY KEY AUTO_INCREMENT,
     company_name VARCHAR(255) NOT NULL,
     industry VARCHAR(255),
     headquarters_location VARCHAR(255)
 );
 
 -- employer table
-CREATE TABLE employer (
-    employer_id INT PRIMARY KEY,
-    company_id INT NOT NULL REFERENCES company(company_id),
+CREATE TABLE employers (
+    employer_id INT PRIMARY KEY AUTO_INCREMENT,
+    company_id INT NOT NULL,
     email VARCHAR(255) NOT NULL,
-    name VARCHAR(255) NOT NULL
+    name VARCHAR(255) NOT NULL,
+    FOREIGN KEY (company_id) REFERENCES companies(company_id)
 );
 
 -- candidate table
-CREATE TABLE candidate (
-    candidate_id INT PRIMARY KEY,
+CREATE TABLE candidates (
+    candidate_id INT PRIMARY KEY AUTO_INCREMENT,
     email VARCHAR(255) NOT NULL UNIQUE,
     name VARCHAR(255) NOT NULL,
     employed BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 -- job postings table
-CREATE TABLE job_posting (
-    job_id INT PRIMARY KEY,
-    employer_id INT NOT NULL REFERENCES employer(employer_id),
-    company_id INT NOT NULL REFERENCES company(company_id),
+CREATE TABLE job_postings (
+    job_id INT PRIMARY KEY AUTO_INCREMENT,
+    employer_id INT NOT NULL,
+    company_id INT NOT NULL,
     job_title VARCHAR(255) NOT NULL,
     job_location VARCHAR(255),
-    work_type VARCHAR(20) NOT NULL CHECK (work_type IN ('in person', 'hybrid', 'remote')),
-    job_type VARCHAR(20) NOT NULL CHECK (job_type IN ('full time', 'part time', 'contract'))
+    work_type VARCHAR(20) NOT NULL,
+    job_type VARCHAR(20) NOT NULL,
+    job_description VARCHAR(4000) NOT NULL,
+    job_status VARCHAR(20) NOT NULL,
+    FOREIGN KEY (employer_id) REFERENCES employers(employer_id),
+    FOREIGN KEY (company_id) REFERENCES companies(company_id)
 );
 
 -- application table for who applied to what
-CREATE TABLE application (
-    app_id INT PRIMARY KEY,
-    job_id INT NOT NULL REFERENCES job_posting(job_id),
-    company_id INT NOT NULL REFERENCES company(company_id),
-    candidate_id INT NOT NULL REFERENCES candidate(candidate_id),
-    status VARCHAR(20) NOT NULL DEFAULT 'applied' CHECK (status IN ('applied', 'rejected', 'interview')),
+CREATE TABLE applications (
+    app_id INT PRIMARY KEY AUTO_INCREMENT,
+    job_id INT NOT NULL,
+    company_id INT NOT NULL,
+    candidate_id INT NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'applied',
+    UNIQUE (candidate_id, job_id),
+    FOREIGN KEY (job_id) REFERENCES job_postings(job_id),
+    FOREIGN KEY (company_id) REFERENCES companies(company_id),
+    FOREIGN KEY (candidate_id) REFERENCES candidates(candidate_id)
+);
 
-    -- make sure they can't apply to the same job twice
-    UNIQUE (candidate_id, job_id)
+CREATE TABLE users (
+    user_id INT PRIMARY KEY AUTO_INCREMENT,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    role ENUM('candidate', 'employer', 'admin') NOT NULL
 );
