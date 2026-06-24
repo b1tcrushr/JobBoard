@@ -1,12 +1,57 @@
 const db = require("../db");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
-function getAllUsers(req, res) {
+async function getAllUsers(req, res) {
     try {
-
+        const [rows] = await db.query("SELECT id, name, email FROM users");
+        res.json(rows);
     } catch (err) {
-        const [rows] = await db.query("SELECT * FROM company");
+        res.status(500).json({ error: err.message });
     }
-    res.json(users);
 }
 
-module.exports = { getAllUsers };
+async function getUsersById(req, res) {
+    try {
+        const [rows] = await db.query("SELECT id, name, email FROM users");
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}
+
+
+
+async function createUser(req, res) {
+    const { name, email, password } = req.body;
+
+    if (!name || !email || !password) {
+        return res.status(400).json({ error: "name, email, and password are required" });
+    }
+
+    try {
+        //check if email in use
+        const [existing] = await db.query("SELECT id FROM users WHERE email = ?", [email]);
+        if (existing.length > 0) {
+            return res.status(409).json({ error: "Email already in use" });
+        }
+        //hash the password, so its not stored in plaintext
+        const passwordHash = await bcrypt.hash(password, 10);
+        const [result] = await db.query(
+            "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
+            [name, email, passwordHash]
+        );
+        //sign jwt with id and email
+        const token = jwt.sign(
+            { id: result.insertId, email },
+            process.env.JWT_SECRET,
+            { expiresIn: "7d" }
+        );
+
+        res.status(201).json({ id: result.insertId, name, email, token });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}
+
+module.exports = { getAllUsers, createUser };
