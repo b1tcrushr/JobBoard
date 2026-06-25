@@ -15,7 +15,7 @@ job-table-container {
   width: 100%;
   overflow: hidden;
   border-radius: 12px;
-  background-color: black;
+  background-color: #ffffff; 
 }
 
 .job-table thead {
@@ -34,5 +34,5 @@ job-table-container {
 }
 
 .job-table tbody tr:hover {
-  background-color: #f9f9f9;
+  background-color: #f3f4f6; 
 }
