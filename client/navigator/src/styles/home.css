@@ -1,13 +1,23 @@
 
 .bubbles-container {
-    display: flex;
-    flex-direction: row;
-    gap: 25px;
-    justify-content: center;
+  display: flex;
+  gap: 16px;
+  width: 100%;
 }
 
 .container {
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  padding: 20px;
+}
+
+.bottom-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 50px;
+}
+
+.saved-listings {
+    margin-left: 350px;
 }
