@@ -60,10 +60,10 @@ A centralized web portal connecting university students + recent graduates with 
 
 | Layer | Technology |
 |---|---|
-| Frontend | TBD |
-| Backend | TBD |
+| Frontend | React |
+| Backend | Node / express server |
 | Database | MySQL |
-| Authentication | TBD |
+| Authentication | JWT / bcrypt |
 | Hosting | TBD |
 
 ---
