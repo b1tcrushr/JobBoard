@@ -28,7 +28,7 @@ function Header() {
         <p> | </p>
         <Link to="/jobs">Jobs</Link>
         <p> | </p>
-        <Link to="/">Applications</Link>
+        <Link to="/dashboard">Applications</Link>
       </nav>
 
       <div className="header-right">

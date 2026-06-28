@@ -136,12 +136,12 @@ const JobDetails = () => {
   }, [id]);
 
   const handleApplyClick = () => {
-    const isGuest = true; 
+    const isGuest = false; 
     
     if (isGuest) {
       setShowAuthModal(true);
     } else {
-      console.log("Proceeding to application flow...");
+      navigate(`/apply`);
     }
   };
 
