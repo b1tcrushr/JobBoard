@@ -8,6 +8,9 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import ManageAccount from "./pages/ManageAccount";
 import ApplyJob from "./pages/ApplyJob";
+import CandidateDashboard from "./pages/CandidateDashboard";
+import EmployerDashboard from "./pages/EmployerDashboard";
+import JobPostingForm from "./pages/JobPostingForm";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import "./styles/app.css";;
 
@@ -25,6 +28,9 @@ function App() {
           <Route path="/jobs/:id" element={<JobDetails />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/dashboard" element={<CandidateDashboard />} />
+          <Route path="/edashboard" element={<EmployerDashboard />} />
+          <Route path="/post" element={<JobPostingForm />} />
         </Routes>
       </main>
       <Footer />
