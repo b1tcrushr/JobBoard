@@ -38,9 +38,14 @@ function Header() {
             <button className="common-button" onClick={handleLogout}>Sign out</button>
           </>
         ) : (
+          <>
+          <Link to="/account">
+            <button className="profile">M</button>
+          </Link>
           <Link to="/login">
             <button className="common-button">Login / Register</button>
           </Link>
+          </>
         )}
       </div>
     </header>
