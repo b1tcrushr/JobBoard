@@ -13,6 +13,7 @@ import "./styles/app.css";;
 
 function App() {
   return (
+    <AuthProvider>
     <div className="app-container">
       <Header />
       <main className="main-content">
@@ -28,6 +29,7 @@ function App() {
       </main>
       <Footer />
     </div>
+    </AuthProvider>
   );
 }
 

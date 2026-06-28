@@ -26,7 +26,7 @@ function Header() {
       <nav className="header-center">
         <Link to="/">Home</Link>
         <p> | </p>
-        <Link to="/">Jobs</Link>
+        <Link to="/jobs">Jobs</Link>
         <p> | </p>
         <Link to="/">Applications</Link>
       </nav>
