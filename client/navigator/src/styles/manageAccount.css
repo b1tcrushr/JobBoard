@@ -1,0 +1,88 @@
+.manage-account-container {
+  padding: 20px;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.manage-account-title {
+  margin-bottom: 20px;
+}
+
+.manage-account-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-card {
+  background-color: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.form-card h2 {
+  margin-top: 0;
+  margin-bottom: 18px;
+  font-size: 18px;
+  color: #334155;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.form-group label {
+  font-weight: 600;
+  font-size: 14px;
+  color: #334155;
+}
+
+.form-group input {
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: "Lato", sans-serif;
+  outline: none;
+  transition: border 0.2s ease;
+}
+
+.form-group input:focus {
+  border-color: #2563eb;
+}
+
+.form-message {
+  font-weight: 600;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin: 0;
+}
+
+.form-message.success {
+  background-color: #edf9f1;
+  color: #16a34a;
+  border: 1px solid #ccefd8;
+}
+
+.form-message.error {
+  background-color: #fff1f1;
+  color: #ef4444;
+  border: 1px solid #f4d1d1;
+}
+
+.manage-save-btn {
+  align-self: flex-start;
+  padding: 12px 28px;
+  font-size: 15px;
+  font-weight: 600;
+}
