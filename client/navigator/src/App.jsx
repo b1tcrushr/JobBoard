@@ -1,7 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import Home from "./pages/home/Home";
-import JobPostins from "./pages/jobpostings/Jobs";
-import JobDetails from "./pages/jobdetails/JobDetails";
+import JobPostins from "./pages/Jobs";
+import JobDetails from "./pages/JobDetails";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import ManageAccount from "./pages/ManageAccount";
