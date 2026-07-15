@@ -1,20 +1,29 @@
 const db = require("../db");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-
 
 async function createApplication(req, res) {
-    const { applicationID, resume } = req.body;
+    const { job_id, company_id, candidate_id } = req.body;
 
-    if (!applicationID || !resume ) {
-        return res.status(400).json({ error: "applicationId and resume must be attached in body" });
+    if (!job_id || !company_id || !candidate_id) {
+        return res.status(400).json({ error: "job_id, company_id, and candidate_id are required" });
     }
 
     try {
-    
-        res.send(200);
-        
+
+        const [result] = await db.query(
+            "INSERT INTO applications (job_id, company_id, candidate_id) VALUES (?, ?, ?)",
+            [job_id, company_id, candidate_id]
+        );
+
+        res.status(201).json({
+            app_id: result.insertId,
+            job_id,
+            company_id,
+            candidate_id,
+            status: "applied"
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 }
+
+module.exports = { createApplication };
