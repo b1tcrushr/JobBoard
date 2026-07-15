@@ -9,7 +9,15 @@ export default function Register() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({ name: "", email: "", password: "", role: "candidate" });
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    role: "candidate",
+    company_name: "",
+    industry: "",
+    headquarters_location: ""
+  });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -86,6 +94,44 @@ export default function Register() {
               <option value="employer">Employer</option>
             </select>
           </label>
+
+          {form.role === "employer" && (
+            <>
+              <label>
+                Company name
+                <input
+                  type="text"
+                  name="company_name"
+                  value={form.company_name}
+                  onChange={handleChange}
+                  placeholder="Acme Inc."
+                  required
+                />
+              </label>
+
+              <label>
+                Industry
+                <input
+                  type="text"
+                  name="industry"
+                  value={form.industry}
+                  onChange={handleChange}
+                  placeholder="Software (optional)"
+                />
+              </label>
+
+              <label>
+                Headquarters location
+                <input
+                  type="text"
+                  name="headquarters_location"
+                  value={form.headquarters_location}
+                  onChange={handleChange}
+                  placeholder="Toronto, ON (optional)"
+                />
+              </label>
+            </>
+          )}
 
           <button type="submit" className="auth-submit" disabled={loading}>
             {loading ? "Creating account…" : "Create account"}

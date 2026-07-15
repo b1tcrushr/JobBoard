@@ -31,7 +31,7 @@ async function getUsersById(req, res) {
 
 
 async function createUser(req, res) {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, company_name, industry, headquarters_location } = req.body;
 
     if (!name || !email || !password || !role) {
         return res.status(400).json({ error: "name, email, password, and role are required" });
@@ -39,6 +39,10 @@ async function createUser(req, res) {
 
     if (role !== "candidate" && role !== "employer" && role !== "admin") {
         return res.status(400).json({ error: "role must be one of: candidate, employer, admin" });
+    }
+
+    if (role === "employer" && !company_name) {
+        return res.status(400).json({ error: "company_name is required for employer accounts" });
     }
 
     try {
@@ -53,14 +57,46 @@ async function createUser(req, res) {
             "INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)",
             [name, email, passwordHash, role]
         );
+        const userId = result.insertId;
+
+        //create the matching profile row so job postings/applications have something to link to
+        if (role === "candidate") {
+            await db.query(
+                "INSERT INTO candidates (user_id, email, name) VALUES (?, ?, ?)",
+                [userId, email, name]
+            );
+        } else if (role === "employer") {
+            //reuse the company if it already exists, otherwise create it
+            const [existingCompany] = await db.query(
+                "SELECT company_id FROM companies WHERE company_name = ?",
+                [company_name]
+            );
+
+            let companyId;
+            if (existingCompany.length > 0) {
+                companyId = existingCompany[0].company_id;
+            } else {
+                const [companyResult] = await db.query(
+                    "INSERT INTO companies (company_name, industry, headquarters_location) VALUES (?, ?, ?)",
+                    [company_name, industry || null, headquarters_location || null]
+                );
+                companyId = companyResult.insertId;
+            }
+
+            await db.query(
+                "INSERT INTO employers (user_id, company_id, email, name) VALUES (?, ?, ?, ?)",
+                [userId, companyId, email, name]
+            );
+        }
+
         //sign jwt with id, email, and role
         const token = jwt.sign(
-            { id: result.insertId, email, role },
+            { id: userId, email, role },
             process.env.JWT_SECRET,
             { expiresIn: "7d" }
         );
 
-        res.status(201).json({ id: result.insertId, name, email, role, token });
+        res.status(201).json({ id: userId, name, email, role, token });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
