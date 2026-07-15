@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 
 async function getAllUsers(req, res) {
     try {
-        const [rows] = await db.query("SELECT user_id, email, role FROM users");
+        const [rows] = await db.query("SELECT user_id, name, email, role FROM users");
         res.json(rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -14,7 +14,7 @@ async function getAllUsers(req, res) {
 async function getUsersById(req, res) {
     try {
         const [rows] = await db.query(
-            "SELECT user_id, email, role FROM users WHERE user_id = ?",
+            "SELECT user_id, name, email, role FROM users WHERE user_id = ?",
             [req.params.id]
         );
 
@@ -31,10 +31,10 @@ async function getUsersById(req, res) {
 
 
 async function createUser(req, res) {
-    const { email, password, role } = req.body;
+    const { name, email, password, role } = req.body;
 
-    if (!email || !password || !role) {
-        return res.status(400).json({ error: "email, password, and role are required" });
+    if (!name || !email || !password || !role) {
+        return res.status(400).json({ error: "name, email, password, and role are required" });
     }
 
     if (role !== "candidate" && role !== "employer" && role !== "admin") {
@@ -50,8 +50,8 @@ async function createUser(req, res) {
         //hash the password, so its not stored in plaintext
         const passwordHash = await bcrypt.hash(password, 10);
         const [result] = await db.query(
-            "INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)",
-            [email, passwordHash, role]
+            "INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)",
+            [name, email, passwordHash, role]
         );
         //sign jwt with id, email, and role
         const token = jwt.sign(
@@ -60,7 +60,7 @@ async function createUser(req, res) {
             { expiresIn: "7d" }
         );
 
-        res.status(201).json({ id: result.insertId, email, role, token });
+        res.status(201).json({ id: result.insertId, name, email, role, token });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -77,7 +77,7 @@ async function loginUser(req, res) {
 
     try {
         const [rows] = await db.query(
-            "SELECT user_id, email, password_hash, role FROM users WHERE email = ?",
+            "SELECT user_id, name, email, password_hash, role FROM users WHERE email = ?",
             [email]
         );
 
@@ -105,6 +105,7 @@ async function loginUser(req, res) {
             jwtToken,
             user: {
                 id: user.user_id,
+                name: user.name,
                 email: user.email,
                 role: user.role
             }

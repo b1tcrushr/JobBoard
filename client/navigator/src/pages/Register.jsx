@@ -9,8 +9,8 @@ export default function Register() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const [form, setForm]       = useState({ name: "", email: "", password: "" });
-  const [error, setError]     = useState("");
+  const [form, setForm] = useState({ name: "", email: "", password: "", role: "candidate" });
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   function handleChange(e) {
@@ -23,7 +23,7 @@ export default function Register() {
     setLoading(true);
     try {
       const data = await api.post("/api/users/register", form);
-      login({ id: data.id, name: data.name, email: data.email }, data.token);
+      login({ id: data.id, name: data.name, email: data.email, role: data.role }, data.token);
       navigate("/");
     } catch (err) {
       setError(err.message);
@@ -77,6 +77,14 @@ export default function Register() {
               minLength={8}
               required
             />
+          </label>
+
+          <label>
+            I am a
+            <select name="role" value={form.role} onChange={handleChange} required>
+              <option value="candidate">Candidate</option>
+              <option value="employer">Employer</option>
+            </select>
           </label>
 
           <button type="submit" className="auth-submit" disabled={loading}>
