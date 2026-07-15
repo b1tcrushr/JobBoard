@@ -1,0 +1,120 @@
+.auth-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  padding: 40px 16px;
+  background-color: #DCE2F0;
+}
+
+.auth-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 48px 40px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 4px 24px rgba(80, 88, 108, 0.12);
+}
+
+.auth-logo {
+  font-size: 36px;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.auth-title {
+  font-family: "Lato", sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: #1e293b;
+  text-align: center;
+  margin: 0 0 6px;
+}
+
+.auth-subtitle {
+  color: #64748b;
+  text-align: center;
+  margin: 0 0 28px;
+  font-size: 15px;
+}
+
+.auth-error {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  color: #b91c1c;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.auth-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.auth-form input {
+  border: 1.5px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 15px;
+  font-family: "Lato", sans-serif;
+  transition: border-color 0.2s;
+  outline: none;
+  color: #1e293b;
+}
+
+.auth-form input:focus {
+  border-color: #50586C;
+  box-shadow: 0 0 0 3px rgba(80, 88, 108, 0.12);
+}
+
+.auth-submit {
+  margin-top: 8px;
+  background: #50586C;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: "Lato", sans-serif;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.auth-submit:hover:not(:disabled) {
+  background: #3c4459;
+}
+
+.auth-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.auth-switch {
+  text-align: center;
+  margin-top: 24px;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.auth-switch a {
+  color: #50586C;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.auth-switch a:hover {
+  text-decoration: underline;
+}

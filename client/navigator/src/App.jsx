@@ -1,22 +1,41 @@
 import { Routes, Route } from "react-router-dom";
 import Home from "./pages/home/Home";
+import JobPostins from "./pages/Jobs";
+import JobDetails from "./pages/JobDetails";
+import Login from "./pages/Login.jsx";
+import Register from "./pages/Register.jsx";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
-import "./styles/app.css"
+import ManageAccount from "./pages/ManageAccount";
+import ApplyJob from "./pages/ApplyJob";
+import CandidateDashboard from "./pages/CandidateDashboard";
+import EmployerDashboard from "./pages/EmployerDashboard";
+import JobPostingForm from "./pages/JobPostingForm";
+import { AuthProvider } from "./context/AuthContext.jsx";
+import "./styles/app.css";;
 
 function App() {
   return (
+    <AuthProvider>
     <div className="app-container">
       <Header />
-      {/* define routes here */}
       <main className="main-content">
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/account" element={<ManageAccount />} />
+          <Route path="/apply" element={<ApplyJob />} />
+          <Route path="/jobs" element={<JobPostins />} />
+          <Route path="/jobs/:id" element={<JobDetails />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/dashboard" element={<CandidateDashboard />} />
+          <Route path="/edashboard" element={<EmployerDashboard />} />
+          <Route path="/post" element={<JobPostingForm />} />
         </Routes>
       </main>
-
-      <Footer/>
+      <Footer />
     </div>
+    </AuthProvider>
   );
 }
 
