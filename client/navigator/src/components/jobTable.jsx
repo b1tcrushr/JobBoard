@@ -1,9 +1,11 @@
+import { useNavigate } from "react-router-dom";
 import "../styles/JobTable.css";
 
 function JobTable({
   jobs,
   condense = false
 }) {
+  const navigate = useNavigate();
   return (
     <div className="job-table-container">
       {!condense && <h2 className="job-table-title">Job Listings</h2>}
@@ -21,15 +23,15 @@ function JobTable({
 
         <tbody>
           {jobs.map((job) => (
-            <tr key={job.id}>
+            <tr key={job.job_id} onClick={() => navigate(`/jobs/${job.job_id}`)} >
                 <td>
-                    {job.title}
-                    {condense && <p>({job.location})</p>}
+                    {job.job_title}
+                    {condense && <p className="job-location-text">({job.job_location})</p>}
                 </td>
-                <td>{job.company}</td>
-                {!condense && <td>{job.location}</td>}
-                {!condense && <td>{job.type}</td>}
-                {!condense && <td>{job.salary}</td>}
+                <td>{job.company_name}</td>
+                {!condense && <td>{job.job_location}</td>}
+                {!condense && <td>{job.job_type}</td>}
+                {!condense && <td>{job.job_status}</td>}
             </tr>
           ))}
         </tbody>

@@ -36,6 +36,9 @@ CREATE TABLE candidates (
     user_id INT NOT NULL UNIQUE,
     email VARCHAR(255) NOT NULL UNIQUE,
     name VARCHAR(255) NOT NULL,
+    applications_sent INT NOT NULL DEFAULT 0,
+    interviews_scheduled INT NOT NULL DEFAULT 0,
+    not_selected INT NOT NULL DEFAULT 0,
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 

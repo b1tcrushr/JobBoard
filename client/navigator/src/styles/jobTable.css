@@ -34,5 +34,11 @@ job-table-container {
 }
 
 .job-table tbody tr:hover {
-  background-color: #f3f4f6; 
+  background-color: #f3f4f6;
+}
+
+.job-location-text {
+  font-size: 0.85em;
+  color: #6b7280;
+  margin: 2px 0 0;
 }
