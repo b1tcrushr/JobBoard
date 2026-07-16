@@ -1,20 +1,83 @@
 const db = require("../db");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-
 
 async function createApplication(req, res) {
-    const { applicationID, resume } = req.body;
+    const { job_id, company_id, candidate_id } = req.body;
 
-    if (!applicationID || !resume ) {
-        return res.status(400).json({ error: "applicationId and resume must be attached in body" });
+    if (!job_id || !company_id || !candidate_id) {
+        return res.status(400).json({ error: "job_id, company_id, and candidate_id are required" });
     }
 
     try {
-    
-        res.send(200);
-        
+
+        const [result] = await db.query(
+            "INSERT INTO applications (job_id, company_id, candidate_id) VALUES (?, ?, ?)",
+            [job_id, company_id, candidate_id]
+        );
+
+        res.status(201).json({
+            app_id: result.insertId,
+            job_id,
+            company_id,
+            candidate_id,
+            status: "applied"
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 }
+async function getAllApplicationsByJob(req, res) {
+    const { job_id } = req.params;
+
+    try {
+        const [rows] = await db.query(
+            `SELECT a.app_id, a.job_id, a.company_id, a.candidate_id, a.status, c.name, c.email
+             FROM applications a
+             JOIN candidates c ON a.candidate_id = c.candidate_id
+             WHERE a.job_id = ?`,
+            [job_id]
+        );
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}
+async function getAllApplicationsByUser(req, res) {
+    const { user_id } = req.params;
+    try {
+        const [rows] = await db.query(
+            `SELECT a.app_id, a.job_id, a.company_id, a.candidate_id, a.status, c.name, c.email
+            FROM applications a
+            JOIN candidates c ON a.candidate_id = c.candidate_id
+            WHERE c.user_id = ?`,
+            [user_id]
+        );
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}
+async function updateApplication(req, res) {
+    const { app_id } = req.params;
+    const { status } = req.body;
+
+    if (!status) {
+        return res.status(400).json({ error: "status is required" });
+    }
+
+    try {
+        const [result] = await db.query(
+            "UPDATE applications SET status = ? WHERE app_id = ?",
+            [status, app_id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: "Application not found" });
+        }
+        
+        res.json({ app_id, status });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}
+
+module.exports = { createApplication, getAllApplicationsByJob, getAllApplicationsByUser, updateApplication };

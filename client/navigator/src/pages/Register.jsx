@@ -9,8 +9,16 @@ export default function Register() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const [form, setForm]       = useState({ name: "", email: "", password: "" });
-  const [error, setError]     = useState("");
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    role: "candidate",
+    company_name: "",
+    industry: "",
+    headquarters_location: ""
+  });
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   function handleChange(e) {
@@ -23,7 +31,7 @@ export default function Register() {
     setLoading(true);
     try {
       const data = await api.post("/api/users/register", form);
-      login({ id: data.id, name: data.name, email: data.email }, data.token);
+      login({ id: data.id, name: data.name, email: data.email, role: data.role }, data.token);
       navigate("/");
     } catch (err) {
       setError(err.message);
@@ -78,6 +86,52 @@ export default function Register() {
               required
             />
           </label>
+
+          <label>
+            I am a
+            <select name="role" value={form.role} onChange={handleChange} required>
+              <option value="candidate">Candidate</option>
+              <option value="employer">Employer</option>
+            </select>
+          </label>
+
+          {form.role === "employer" && (
+            <>
+              <label>
+                Company name
+                <input
+                  type="text"
+                  name="company_name"
+                  value={form.company_name}
+                  onChange={handleChange}
+                  placeholder="Acme Inc."
+                  required
+                />
+              </label>
+
+              <label>
+                Industry
+                <input
+                  type="text"
+                  name="industry"
+                  value={form.industry}
+                  onChange={handleChange}
+                  placeholder="Software (optional)"
+                />
+              </label>
+
+              <label>
+                Headquarters location
+                <input
+                  type="text"
+                  name="headquarters_location"
+                  value={form.headquarters_location}
+                  onChange={handleChange}
+                  placeholder="Toronto, ON (optional)"
+                />
+              </label>
+            </>
+          )}
 
           <button type="submit" className="auth-submit" disabled={loading}>
             {loading ? "Creating account…" : "Create account"}
