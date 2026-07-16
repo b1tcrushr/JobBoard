@@ -2,7 +2,12 @@ const db = require("../db");
 
 async function getAllJobs(req, res) {
     try {
-        const [rows] = await db.query("SELECT job_id, employer_id, company_id, job_title, job_location, job_description, job_status FROM job_postings WHERE job_status != 'closed'");
+        const [rows] = await db.query(
+            `SELECT j.job_id, j.employer_id, j.company_id, j.job_title, j.job_location, j.work_type, j.job_type, j.job_description, j.job_status, c.company_name
+             FROM job_postings j
+             JOIN companies c ON j.company_id = c.company_id
+             WHERE j.job_status != 'closed'`
+        );
         res.json(rows);
     } catch (err) {
         res.status(500).json({ error: err.message });

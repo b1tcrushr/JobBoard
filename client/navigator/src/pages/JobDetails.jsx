@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import "../styles/job.css"
+import { saveJob, isJobSaved } from "../hooks/savedJobs";
 
 const mockDatabase = [
   {
@@ -126,14 +127,21 @@ const mockDatabase = [
 const JobDetails = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [jobData, setJobData] = useState(null);
-  
+  const [saved, setSaved] = useState(false);
+
   const navigate = useNavigate();
-  const { id } = useParams(); 
+  const { id } = useParams();
 
   useEffect(() => {
     const foundJob = mockDatabase.find(job => job.id === parseInt(id));
     setJobData(foundJob);
+    setSaved(isJobSaved(parseInt(id)));
   }, [id]);
+
+  const handleSaveClick = () => {
+    saveJob({ job_id: jobData.id, job_title: jobData.title, company_name: jobData.company });
+    setSaved(true);
+  };
 
   const handleApplyClick = () => {
     const isGuest = false; 
@@ -164,7 +172,9 @@ const JobDetails = () => {
         </div>
         <div className="header-actions">
           <button className="primary-btn" onClick={handleApplyClick}>Apply Now</button>
-          <button className="secondary-btn">★ Save Job</button>
+          <button className="secondary-btn" onClick={handleSaveClick} disabled={saved}>
+            {saved ? "✓ Saved" : "★ Save Job"}
+          </button>
         </div>
       </div>
 

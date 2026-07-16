@@ -14,6 +14,11 @@ async function createApplication(req, res) {
             [job_id, company_id, candidate_id]
         );
 
+        await db.query(
+            "UPDATE candidates SET applications_sent = applications_sent + 1 WHERE candidate_id = ?",
+            [candidate_id]
+        );
+
         res.status(201).json({
             app_id: result.insertId,
             job_id,
@@ -69,7 +74,22 @@ async function updateApplication(req, res) {
             "UPDATE applications SET status = ? WHERE app_id = ?",
             [status, app_id]
         );
-        
+
+        const [app] = await db.query("SELECT candidate_id FROM applications WHERE app_id = ?", [app_id]);
+        const candidateId = app[0].candidate_id;
+
+        if (status === "interview") {
+            await db.query(
+                "UPDATE candidates SET interviews_scheduled = interviews_scheduled + 1 WHERE candidate_id = ?",
+                [candidateId]
+            );
+        } else if (status === "rejected") {
+            await db.query(
+                "UPDATE candidates SET not_selected = not_selected + 1 WHERE candidate_id = ?",
+                [candidateId]
+            );
+        }
+
         res.json({ app_id, status });
     } catch (err) {
         res.status(500).json({ error: err.message });
