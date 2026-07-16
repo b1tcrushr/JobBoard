@@ -69,10 +69,6 @@ async function updateApplication(req, res) {
             "UPDATE applications SET status = ? WHERE app_id = ?",
             [status, app_id]
         );
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: "Application not found" });
-        }
         
         res.json({ app_id, status });
     } catch (err) {
