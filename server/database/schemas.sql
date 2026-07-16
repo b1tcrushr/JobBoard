@@ -2,7 +2,7 @@
 CREATE DATABASE IF NOT EXISTS job_coop_portal;
 USE job_coop_portal;
 
--- create company table first so other tables can use it
+-- create company table. links to employer, job postings, applications
 CREATE TABLE companies (
     company_id INT PRIMARY KEY AUTO_INCREMENT,
     company_name VARCHAR(255) NOT NULL,
