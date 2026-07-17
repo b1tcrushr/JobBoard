@@ -1,51 +1,24 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import "../styles/job.css"
+import { useEffect } from 'react';
+import { api } from '../api/apiClient';
 
-const initialJobs = [
-  {
-    id: 1,
-    title: 'Data Governance Analyst (Fall Co-op)',
-    company: 'Laurier Analytics Group',
-    location: 'Waterloo, ON (Hybrid)',
-    experience: 'Entry Level',
-    roleType: 'Co-op',
-    payGrade: 'Grade 4 ($25/hr)',
-    posted: '2 hours ago'
-  },
-  {
-    id: 2,
-    title: 'Senior Full Stack Engineer',
-    company: 'TechCorp Solutions',
-    location: 'New York, NY (Hybrid)',
-    experience: '5+ Years',
-    roleType: 'Full-Time',
-    payGrade: 'Grade 8 ($120k - $140k)',
-    posted: '2 hours ago'
-  },
-  {
-    id: 3,
-    title: 'UI/UX Product Designer',
-    company: 'Creative Studio',
-    location: 'Remote (US)',
-    experience: '3+ Years',
-    roleType: 'Full-Time',
-    payGrade: 'Grade 7 ($95k - $110k)',
-    posted: '1 day ago'
-  },
-  {
-    id: 4,
-    title: 'Junior Data Analyst',
-    company: 'Finance Group Inc.',
-    location: 'Toronto, ON (On-site)',
-    experience: 'Entry Level',
-    roleType: 'Part-Time',
-    payGrade: 'Grade 5 ($35/hr)',
-    posted: '3 days ago'
-  }
-];
 
 const Jobs = () => {
+ 
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  
+  useEffect(() => {
+    api.get("/api/jobs")
+      .then(setJobs)
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false));
+  },[]);
+
+  //Filters
   const navigate = useNavigate();
   const [keyword, setKeyword] = useState('');
   const [location, setLocation] = useState('');
@@ -53,18 +26,18 @@ const Jobs = () => {
   const [roleType, setRoleType] = useState('');
   const [payGrade, setPayGrade] = useState('');
   
-  const [filteredJobs, setFilteredJobs] = useState(initialJobs);
+  const [filteredJobs, setFilteredJobs] = useState(jobs);
   
   const handleSearch = (e) => {
     e.preventDefault();
     
-    const results = initialJobs.filter(job => {
-      const matchKeyword = job.title.toLowerCase().includes(keyword.toLowerCase()) || 
-                           job.company.toLowerCase().includes(keyword.toLowerCase());
-      const matchLocation = job.location.toLowerCase().includes(location.toLowerCase());
-      const matchExperience = experience === '' || job.experience === experience;
-      const matchRoleType = roleType === '' || job.roleType === roleType;
-      const matchPayGrade = payGrade === '' || job.payGrade === payGrade;
+    const results = jobs.filter(job => {
+      const matchKeyword = job.job_title.toLowerCase().includes(keyword.toLowerCase()) ||
+                           job.company_name.toLowerCase().includes(keyword.toLowerCase());
+      const matchLocation = (job.job_location || '').toLowerCase().includes(location.toLowerCase());
+      const matchExperience = experience === '' || job.experience_level === experience;
+      const matchRoleType = roleType === '' || job.role_type === roleType;
+      const matchPayGrade = payGrade === '' || job.pay_grade === payGrade;
 
       return matchKeyword && matchLocation && matchExperience && matchRoleType && matchPayGrade;
     });
@@ -78,7 +51,7 @@ const Jobs = () => {
     setExperience('');
     setRoleType('');
     setPayGrade('');
-    setFilteredJobs(initialJobs);
+    setFilteredJobs(jobs);
   };
 
   return (
@@ -121,10 +94,10 @@ const Jobs = () => {
           
           <select value={payGrade} onChange={(e) => setPayGrade(e.target.value)} className="form-select">
             <option value="">Pay Grade ▾</option>
-            <option value="Grade 4 ($25/hr)">Grade 4</option>
-            <option value="Grade 5 ($35/hr)">Grade 5</option>
-            <option value="Grade 7 ($95k - $110k)">Grade 7</option>
-            <option value="Grade 8 ($120k - $140k)">Grade 8</option>
+            <option value="Grade 1">Grade 1</option>
+            <option value="Grade 2">Grade 2</option>
+            <option value="Grade 3">Grade 3</option>
+            <option value="Grade 4">Grade 4</option>
           </select>
 
           <button type="submit" className="primary-btn">Search Jobs</button>
@@ -141,21 +114,20 @@ const Jobs = () => {
           {filteredJobs.length > 0 ? (
             <div className="job-list">
               {filteredJobs.map(job => (
-                <div key={job.id} className="job-card">
+                <div key={job.job_id} className="job-card">
                   <div className="job-info">
-                    <h4 className="job-title">{job.title}</h4>
+                    <h4 className="job-title">{job.job_title}</h4>
                     <p className="company-location-text">
-                      <span className="highlight-blue">{job.company}</span> • {job.location}
+                      <span className="highlight-blue">{job.company_name}</span> • {job.job_location}
                     </p>
                     <p className="job-details-text">
-                      Experience: {job.experience} • {job.roleType} • {job.payGrade}
+                      Experience: {job.experience_level} • {job.role_type} • {job.pay_grade}
                     </p>
-                    <p className="posted-date">Posted: {job.posted}</p>
                   </div>
                   
                   <button 
                     className="primary-btn"
-                    onClick={() => navigate(`/jobs/${job.id}`)}
+                    onClick={() => navigate(`/jobs/${job.job_id}`)}
                   >
                     View & Apply
                   </button>

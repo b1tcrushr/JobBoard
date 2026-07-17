@@ -53,6 +53,12 @@ CREATE TABLE job_postings (
     job_type VARCHAR(20) NOT NULL,
     job_description VARCHAR(4000) NOT NULL,
     job_status VARCHAR(20) NOT NULL,
+    experience_level INT,
+    role_type ENUM('Full-Time', 'Part-Time', 'Co-op'),
+    pay_grade ENUM('Grade 1', 'Grade 2', 'Grade 3', 'Grade 4'),
+    requirements TEXT,
+    responsibilities TEXT,
+    benefits TEXT,
     FOREIGN KEY (employer_id) REFERENCES employers(employer_id),
     FOREIGN KEY (company_id) REFERENCES companies(company_id)
 );

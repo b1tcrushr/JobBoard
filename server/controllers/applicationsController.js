@@ -8,12 +8,11 @@ async function createApplication(req, res) {
     }
 
     try {
-
         const [result] = await db.query(
             "INSERT INTO applications (job_id, company_id, candidate_id) VALUES (?, ?, ?)",
             [job_id, company_id, candidate_id]
         );
-
+        //updating the candidate stats
         await db.query(
             "UPDATE candidates SET applications_sent = applications_sent + 1 WHERE candidate_id = ?",
             [candidate_id]
@@ -74,10 +73,11 @@ async function updateApplication(req, res) {
             "UPDATE applications SET status = ? WHERE app_id = ?",
             [status, app_id]
         );
-
+        //Todo: probably make this a foreign key???
         const [app] = await db.query("SELECT candidate_id FROM applications WHERE app_id = ?", [app_id]);
         const candidateId = app[0].candidate_id;
 
+        //updating the candidate stats
         if (status === "interview") {
             await db.query(
                 "UPDATE candidates SET interviews_scheduled = interviews_scheduled + 1 WHERE candidate_id = ?",
