@@ -10,13 +10,6 @@ const Jobs = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  
-  useEffect(() => {
-    api.get("/api/jobs")
-      .then(setJobs)
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false));
-  },[]);
 
   //Filters
   const navigate = useNavigate();
@@ -25,9 +18,19 @@ const Jobs = () => {
   const [experience, setExperience] = useState('');
   const [roleType, setRoleType] = useState('');
   const [payGrade, setPayGrade] = useState('');
-  
-  const [filteredJobs, setFilteredJobs] = useState(jobs);
-  
+
+  const [filteredJobs, setFilteredJobs] = useState([]);
+
+  useEffect(() => {
+    api.get("/api/jobs")
+      .then(data => {
+        setJobs(data);
+        setFilteredJobs(data);
+      })
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false));
+  },[]);
+
   const handleSearch = (e) => {
     e.preventDefault();
     
