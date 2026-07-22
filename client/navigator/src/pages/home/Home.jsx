@@ -14,6 +14,7 @@ function Home() {
     const [jobs, setJobs] = useState([]);
     const [candidateStats, setCandidateStats] = useState(null);
     const [employerStats, setEmployerStats] = useState(null);
+    const [platformStats, setPlatformStats] = useState(null);
     const [employerApps, setEmployerApps] = useState([]);
 
     const [savedJobs] = useState(getSavedJobs());
@@ -53,17 +54,18 @@ function Home() {
                 })
                 .catch(err => setError(err.message))
                 .finally(() => setLoading(false));
+        } else if (user?.id) {
+            // Candidate role: Fetch all public jobs and candidate stats
+            Promise.all([
+                api.get("/api/jobs").then(setJobs).catch(err => setError(err.message)),
+                api.get(`/api/candidates/user/${user.id}`).then(setCandidateStats).catch(() => setCandidateStats(null))
+            ]).finally(() => setLoading(false));
         } else {
-            // Candidate or Guest role: Fetch all public jobs and candidate stats if signed in
-            const fetches = [api.get("/api/jobs").then(setJobs).catch(err => setError(err.message))];
-            if (user?.id) {
-                fetches.push(
-                    api.get(`/api/candidates/user/${user.id}`)
-                        .then(setCandidateStats)
-                        .catch(() => setCandidateStats(null))
-                );
-            }
-            Promise.all(fetches).finally(() => setLoading(false));
+            // Guest (Signed Out) role: Fetch public jobs and overall platform stats
+            Promise.all([
+                api.get("/api/jobs").then(setJobs).catch(err => setError(err.message)),
+                api.get("/api/jobs/stats").then(setPlatformStats).catch(() => setPlatformStats(null))
+            ]).finally(() => setLoading(false));
         }
     }, [user, isEmployer]);
 
@@ -75,9 +77,14 @@ function Home() {
         );
     }
 
+    const openJobsCount = jobs.filter(j => j.job_status?.toLowerCase() === 'open').length;
+    const companiesHiringCount = new Set(
+        jobs.filter(j => j.job_status?.toLowerCase() === 'open').map(j => j.company_id || j.company_name)
+    ).size;
+
     return (
         <div className="container">
-            <h1>{isEmployer ? "Employer Overview" : "Quick Stats"}</h1>
+            <h1>{isEmployer ? "Employer Overview" : user ? "Quick Stats" : "Platform Overview"}</h1>
             {error && <p className="error-text">{error}</p>}
             
             <div className="bubbles-container">
@@ -110,7 +117,7 @@ function Home() {
                             title="Applications Reviewed"
                             height={bubbleMinHeight}/>
                     </>
-                ) : (
+                ) : user ? (
                     <>
                         <DisplayBubble
                             borderColour="#cfe2ff"
@@ -139,41 +146,72 @@ function Home() {
                             title="Not Selected"
                             height={bubbleMinHeight}/>
                     </>
+                ) : (
+                    <>
+                        <DisplayBubble
+                            borderColour="#cfe2ff"
+                            bgColour="#eef5ff"
+                            textColour="#2563eb"
+                            icon="💼"
+                            stat={platformStats?.total_jobs ?? jobs.length}
+                            title="Jobs Posted"
+                            height={bubbleMinHeight}/>
+
+                        <DisplayBubble
+                            borderColour="#ccefd8"
+                            bgColour="#edf9f1"
+                            textColour="#16a34a"
+                            icon="🟢"
+                            stat={platformStats?.still_hiring ?? openJobsCount}
+                            title="Still Hiring"
+                            height={bubbleMinHeight}/>
+
+                        <DisplayBubble
+                            borderColour="#fef3c7"
+                            bgColour="#fffbeb"
+                            textColour="#d97706"
+                            icon="🏢"
+                            stat={platformStats?.companies_hiring ?? companiesHiringCount}
+                            title="Companies Hiring"
+                            height={bubbleMinHeight}/>
+                    </>
                 )}
             </div>
             
-            <div className="bottom-row">
+            <div className="bottom-row" style={!user ? { gridTemplateColumns: "1fr" } : {}}>
                 {/* left job listings */}
                 <div className="job-listings">
                     <h1>{isEmployer ? "My Job Postings" : "Job Listings"}</h1>
                     <JobTable jobs={jobs} condense={true}/>
                 </div>
 
-                {/* right column */}
-                <div className="saved-listings">
-                    <h1>{isEmployer ? "Recent Applicants" : "Saved Listings"}</h1>
-                    {isEmployer ? (
-                        employerApps.length > 0 ? (
-                            employerApps.slice(0, 5).map(app => (
-                                <div key={app.app_id} className="saved-card" style={{ padding: '0.75rem', marginBottom: '0.5rem' }}>
-                                    <div className="saved-job-info">
-                                        <h4 className="saved-job-title">{app.candidate_name}</h4>
-                                        <p className="saved-company">{app.job_title}</p>
+                {/* right column - only shown when signed in */}
+                {user && (
+                    <div className="saved-listings">
+                        <h1>{isEmployer ? "Recent Applicants" : "Saved Listings"}</h1>
+                        {isEmployer ? (
+                            employerApps.length > 0 ? (
+                                employerApps.slice(0, 5).map(app => (
+                                    <div key={app.app_id} className="saved-card" style={{ padding: '0.75rem', marginBottom: '0.5rem' }}>
+                                        <div className="saved-job-info">
+                                            <h4 className="saved-job-title">{app.candidate_name}</h4>
+                                            <p className="saved-company">{app.job_title}</p>
+                                        </div>
+                                        <span style={{ fontSize: '0.8rem', fontWeight: '600', color: '#2563eb' }}>
+                                            {app.status}
+                                        </span>
                                     </div>
-                                    <span style={{ fontSize: '0.8rem', fontWeight: '600', color: '#2563eb' }}>
-                                        {app.status}
-                                    </span>
-                                </div>
-                            ))
+                                ))
+                            ) : (
+                                <p style={{ color: '#94a3b8', fontStyle: 'italic' }}>No applicant submissions recorded yet.</p>
+                            )
                         ) : (
-                            <p style={{ color: '#94a3b8', fontStyle: 'italic' }}>No applicant submissions recorded yet.</p>
-                        )
-                    ) : (
-                        savedJobs.map(job => (
-                            <JobCard key={job.job_id} title={job.job_title} company={job.company_name} job_id={job.job_id}/>
-                        ))
-                    )}
-                </div>
+                            savedJobs.map(job => (
+                                <JobCard key={job.job_id} title={job.job_title} company={job.company_name} job_id={job.job_id}/>
+                            ))
+                        )}
+                    </div>
+                )}
             </div>
             
         </div>

@@ -152,4 +152,22 @@ async function reopenJobById(req, res) {
     }
 }
 
-module.exports = { getAllJobs, getJobByEmployer, getJobById, createJob, updateJobById, closeJobById, reopenJobById };
+async function getJobStats(req, res) {
+    try {
+        const [[totalResult]] = await db.query("SELECT COUNT(*) AS total_jobs FROM job_postings");
+        const [[hiringResult]] = await db.query("SELECT COUNT(*) AS still_hiring FROM job_postings WHERE LOWER(job_status) = 'open'");
+        const [[companiesResult]] = await db.query("SELECT COUNT(DISTINCT company_id) AS companies_hiring FROM job_postings WHERE LOWER(job_status) = 'open'");
+        const [[appsResult]] = await db.query("SELECT COUNT(*) AS total_applications FROM applications");
+
+        res.json({
+            total_jobs: Number(totalResult?.total_jobs || 0),
+            still_hiring: Number(hiringResult?.still_hiring || 0),
+            companies_hiring: Number(companiesResult?.companies_hiring || 0),
+            total_applications: Number(appsResult?.total_applications || 0)
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}
+
+module.exports = { getAllJobs, getJobByEmployer, getJobById, createJob, updateJobById, closeJobById, reopenJobById, getJobStats };
