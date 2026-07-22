@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/home/Home";
 import JobPostins from "./pages/Jobs";
 import JobDetails from "./pages/JobDetails";
@@ -11,8 +11,20 @@ import ApplyJob from "./pages/ApplyJob";
 import CandidateDashboard from "./pages/CandidateDashboard";
 import EmployerDashboard from "./pages/EmployerDashboard";
 import JobPostingForm from "./pages/JobPostingForm";
-import { AuthProvider } from "./context/AuthContext.jsx";
-import "./styles/app.css";;
+import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
+import "./styles/app.css";
+
+function DashboardRouter() {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  if (user.role === "employer") {
+    return <EmployerDashboard />;
+  }
+  return <CandidateDashboard />;
+}
 
 function App() {
   return (
@@ -28,8 +40,8 @@ function App() {
           <Route path="/jobs/:id" element={<JobDetails />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/dashboard" element={<CandidateDashboard />} />
-          <Route path="/edashboard" element={<EmployerDashboard />} />
+          <Route path="/dashboard" element={<DashboardRouter />} />
+          <Route path="/edashboard" element={<DashboardRouter />} />
           <Route path="/post" element={<JobPostingForm />} />
         </Routes>
       </main>

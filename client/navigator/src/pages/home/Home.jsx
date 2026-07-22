@@ -8,85 +8,176 @@ import { getSavedJobs } from "../../hooks/savedJobs";
 import { useAuth } from "../../context/AuthContext";
 
 function Home() {
-    const bubbleMinHeight= 140;
+    const bubbleMinHeight = 140;
     const { user } = useAuth();
 
     const [jobs, setJobs] = useState([]);
-    const [candidateStats, setCandidateStats] = useState([]);
+    const [candidateStats, setCandidateStats] = useState(null);
+    const [employerStats, setEmployerStats] = useState(null);
+    const [employerApps, setEmployerApps] = useState([]);
 
     const [savedJobs] = useState(getSavedJobs());
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+
+    const isEmployer = user?.role === 'employer';
     
     useEffect(() => {
-        api.get("/api/jobs")
-            .then(setJobs)
-            .catch(err => setError(err.message))
-            .finally(() => setLoading(false));
+        setLoading(true);
 
-        if (user) {
-            api.get(`/api/candidates/user/${user.id}`)
-                .then(setCandidateStats)
+        if (isEmployer && user?.id) {
+            // Employer role: Fetch employer profile, employer's jobs, and employer's applications
+            api.get(`/api/employers/user/${user.id}`)
+                .then(empData => {
+                    if (empData && empData.employer_id) {
+                        return Promise.all([
+                            api.get(`/api/jobs/employer/${empData.employer_id}`).catch(() => []),
+                            api.get(`/api/applications/employer/${empData.employer_id}`).catch(() => [])
+                        ]);
+                    }
+                    return [[], []];
+                })
+                .then(([empJobs, empApps]) => {
+                    const jobList = Array.isArray(empJobs) ? empJobs : [];
+                    const appList = Array.isArray(empApps) ? empApps : [];
+
+                    setJobs(jobList);
+                    setEmployerApps(appList);
+
+                    setEmployerStats({
+                        jobsOpen: jobList.filter(j => j.job_status?.toLowerCase() === 'open').length,
+                        toReview: appList.filter(a => ['applied', 'pending', 'under review'].includes(a.status?.toLowerCase())).length,
+                        reviewed: appList.filter(a => ['interview', 'accepted', 'rejected'].includes(a.status?.toLowerCase())).length
+                    });
+                })
                 .catch(err => setError(err.message))
                 .finally(() => setLoading(false));
+        } else {
+            // Candidate or Guest role: Fetch all public jobs and candidate stats if signed in
+            const fetches = [api.get("/api/jobs").then(setJobs).catch(err => setError(err.message))];
+            if (user?.id) {
+                fetches.push(
+                    api.get(`/api/candidates/user/${user.id}`)
+                        .then(setCandidateStats)
+                        .catch(() => setCandidateStats(null))
+                );
+            }
+            Promise.all(fetches).finally(() => setLoading(false));
         }
-    }, [user]);
+    }, [user, isEmployer]);
+
+    if (loading) {
+        return (
+            <div className="container">
+                <p style={{ color: '#a3a3a3' }}>Loading homepage...</p>
+            </div>
+        );
+    }
 
     return (
-        !loading && (
         <div className="container">
-            <h1>Quick Stats</h1>
-            {/* error check */}
+            <h1>{isEmployer ? "Employer Overview" : "Quick Stats"}</h1>
             {error && <p className="error-text">{error}</p>}
             
             <div className="bubbles-container">
-                <DisplayBubble
-                    borderColour="#cfe2ff"
-                    bgColour="#eef5ff"
-                    textColour="#2563eb"
-                    icon="✈️"
-                    stat={candidateStats.applications_sent}
-                    title="Applications Sent"
-                    height={bubbleMinHeight}/>
+                {isEmployer ? (
+                    <>
+                        <DisplayBubble
+                            borderColour="#ccefd8"
+                            bgColour="#edf9f1"
+                            textColour="#16a34a"
+                            icon="💼"
+                            stat={employerStats?.jobsOpen ?? 0}
+                            title="Jobs Open"
+                            height={bubbleMinHeight}/>
 
-                <DisplayBubble
-                    borderColour="#ccefd8"
-                    bgColour="#edf9f1"
-                    textColour="#16a34a"
-                    icon="📅"
-                    stat={candidateStats.interviews_scheduled}
-                    title="Interviews Scheduled"
-                    height={bubbleMinHeight}/>
+                        <DisplayBubble
+                            borderColour="#fef3c7"
+                            bgColour="#fffbeb"
+                            textColour="#d97706"
+                            icon="📋"
+                            stat={employerStats?.toReview ?? 0}
+                            title="Applications to Review"
+                            height={bubbleMinHeight}/>
 
-                <DisplayBubble
-                    borderColour="#f4d1d1"
-                    bgColour="#fff1f1"
-                    textColour="#ef4444"
-                    icon="✖"
-                    stat={candidateStats.not_selected}
-                    title="Not Selected"
-                    height={bubbleMinHeight}/>
+                        <DisplayBubble
+                            borderColour="#cfe2ff"
+                            bgColour="#eef5ff"
+                            textColour="#2563eb"
+                            icon="✅"
+                            stat={employerStats?.reviewed ?? 0}
+                            title="Applications Reviewed"
+                            height={bubbleMinHeight}/>
+                    </>
+                ) : (
+                    <>
+                        <DisplayBubble
+                            borderColour="#cfe2ff"
+                            bgColour="#eef5ff"
+                            textColour="#2563eb"
+                            icon="✈️"
+                            stat={candidateStats?.applications_sent ?? 0}
+                            title="Applications Sent"
+                            height={bubbleMinHeight}/>
+
+                        <DisplayBubble
+                            borderColour="#ccefd8"
+                            bgColour="#edf9f1"
+                            textColour="#16a34a"
+                            icon="📅"
+                            stat={candidateStats?.interviews_scheduled ?? 0}
+                            title="Interviews Scheduled"
+                            height={bubbleMinHeight}/>
+
+                        <DisplayBubble
+                            borderColour="#f4d1d1"
+                            bgColour="#fff1f1"
+                            textColour="#ef4444"
+                            icon="✖"
+                            stat={candidateStats?.not_selected ?? 0}
+                            title="Not Selected"
+                            height={bubbleMinHeight}/>
+                    </>
+                )}
             </div>
             
             <div className="bottom-row">
                 {/* left job listings */}
                 <div className="job-listings">
-                    <h1>Job Listings</h1>
+                    <h1>{isEmployer ? "My Job Postings" : "Job Listings"}</h1>
                     <JobTable jobs={jobs} condense={true}/>
                 </div>
-                {/* right saved job listings */}
+
+                {/* right column */}
                 <div className="saved-listings">
-                    <h1>Saved Listings</h1>
-                    {savedJobs.map(job => (
-                        <JobCard key={job.job_id} title={job.job_title} company={job.company_name} job_id={job.job_id}/>
-                    ))}
+                    <h1>{isEmployer ? "Recent Applicants" : "Saved Listings"}</h1>
+                    {isEmployer ? (
+                        employerApps.length > 0 ? (
+                            employerApps.slice(0, 5).map(app => (
+                                <div key={app.app_id} className="saved-card" style={{ padding: '0.75rem', marginBottom: '0.5rem' }}>
+                                    <div className="saved-job-info">
+                                        <h4 className="saved-job-title">{app.candidate_name}</h4>
+                                        <p className="saved-company">{app.job_title}</p>
+                                    </div>
+                                    <span style={{ fontSize: '0.8rem', fontWeight: '600', color: '#2563eb' }}>
+                                        {app.status}
+                                    </span>
+                                </div>
+                            ))
+                        ) : (
+                            <p style={{ color: '#94a3b8', fontStyle: 'italic' }}>No applicant submissions recorded yet.</p>
+                        )
+                    ) : (
+                        savedJobs.map(job => (
+                            <JobCard key={job.job_id} title={job.job_title} company={job.company_name} job_id={job.job_id}/>
+                        ))
+                    )}
                 </div>
             </div>
             
         </div>
-        )
-    )
+    );
 }
 
 export default Home;

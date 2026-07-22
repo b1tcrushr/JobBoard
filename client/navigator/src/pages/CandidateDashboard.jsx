@@ -1,68 +1,89 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext.jsx';
+import { api } from '../api/apiClient.js';
+import { getSavedJobs, removeSavedJob } from '../hooks/savedJobs.js';
 import "../styles/job.css";
 
 const CandidateDashboard = () => {
-
   const [activeTab, setActiveTab] = useState('overview');
+  const [applications, setApplications] = useState([]);
+  const [candidateProfile, setCandidateProfile] = useState(null);
+  const [savedJobs, setSavedJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
+  const { user } = useAuth();
   const navigate = useNavigate();
 
-  const stats = {
-    pending: 3,
-    interviews: 1,
-    rejected: 2
+  useEffect(() => {
+    // Refresh saved jobs from local storage
+    setSavedJobs(getSavedJobs());
+
+    if (!user || !user.id) {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    // Fetch candidate applications & profile stats
+    Promise.all([
+      api.get(`/api/applications/user/${user.id}`).catch(() => []),
+      api.get(`/api/candidates/user/${user.id}`).catch(() => null)
+    ])
+      .then(([appsData, profileData]) => {
+        setApplications(Array.isArray(appsData) ? appsData : []);
+        setCandidateProfile(profileData);
+      })
+      .catch((err) => {
+        setError(err.message || 'Failed to fetch dashboard data');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [user]);
+
+  const handleRemoveSaved = (jobId) => {
+    removeSavedJob(jobId);
+    setSavedJobs(getSavedJobs());
   };
-
-  const recentApplications = [
-    {
-      id: 1,
-      title: 'Catalog Enrichment Analyst',
-      company: 'DataSolutions Inc.',
-      date: 'Oct 24, 2026',
-      status: 'Pending'
-    },
-    {
-      id: 2,
-      title: 'Full Stack Engineer',
-      company: 'CloudScale Systems',
-      date: 'Oct 20, 2026',
-      status: 'Interview'
-    },
-    {
-      id: 3,
-      title: 'UI/UX Designer',
-      company: 'Creative Studio',
-      date: 'Oct 15, 2026',
-      status: 'Rejected'
-    }
-  ];
-
-  const savedJobs = [
-    {
-      id: 101,
-      title: 'DevOps Engineer (Fall 2026 Co-op)',
-      company: 'Global CyberSec',
-      location: 'Remote',
-      savedAgo: '2 days ago'
-    },
-    {
-      id: 102,
-      title: 'Product Manager',
-      company: 'Fintech Innovators',
-      location: 'New York, NY',
-      savedAgo: '5 days ago'
-    }
-  ];
 
   const getStatusClass = (status) => {
-    switch (status) {
-      case 'Pending': return 'status-pending';
-      case 'Interview': return 'status-interview';
-      case 'Rejected': return 'status-rejected';
-      default: return '';
+    switch (status?.toLowerCase()) {
+      case 'applied':
+      case 'pending':
+      case 'under review':
+        return 'status-pending';
+      case 'interview':
+        return 'status-interview';
+      case 'rejected':
+        return 'status-rejected';
+      default:
+        return '';
     }
   };
+
+  const formatStatus = (status) => {
+    if (!status) return 'Applied';
+    return status.charAt(0).toUpperCase() + status.slice(1);
+  };
+
+  // Compute stats based on backend application records or profile totals
+  const stats = {
+    pending: applications.filter(a => ['applied', 'pending', 'under review'].includes(a.status?.toLowerCase())).length,
+    interviews: applications.filter(a => a.status?.toLowerCase() === 'interview').length,
+    rejected: applications.filter(a => a.status?.toLowerCase() === 'rejected').length
+  };
+
+  if (loading) {
+    return (
+      <div className="page-container loading-container">
+        <h2 style={{ color: '#a3a3a3' }}>Loading applicant dashboard...</h2>
+      </div>
+    );
+  }
 
   return (
     <div className="page-container">
@@ -70,13 +91,15 @@ const CandidateDashboard = () => {
       {/* Header Section */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <h1 className="section-title" style={{ fontSize: '1.8rem', margin: 0 }}>
-          Applicant Dashboard — Welcome
+          Applicant Dashboard — Welcome{user?.name ? `, ${user.name}` : ''}
         </h1>
-
-        <button className="secondary-btn" onClick={() => navigate('/edashboard')}>
-            Switch to Employer View
-        </button>
       </div>
+
+      {error && (
+        <div style={{ padding: '1rem', marginBottom: '1.5rem', backgroundColor: '#fee2e2', color: '#991b1b', borderRadius: '0.375rem' }}>
+          {error}
+        </div>
+      )}
 
       {/* Navigation Tabs */}
       <div className="dashboard-tabs">
@@ -90,13 +113,13 @@ const CandidateDashboard = () => {
           className={`tab-btn ${activeTab === 'applications' ? 'active' : ''}`}
           onClick={() => setActiveTab('applications')}
         >
-          My Applications
+          My Applications ({applications.length})
         </button>
         <button 
           className={`tab-btn ${activeTab === 'saved' ? 'active' : ''}`}
           onClick={() => setActiveTab('saved')}
         >
-          Saved Jobs
+          Saved Jobs ({savedJobs.length})
         </button>
       </div>
 
@@ -139,31 +162,37 @@ const CandidateDashboard = () => {
             <div>
               <h2 className="section-title" style={{ fontSize: '1.25rem' }}>My Applications (Recent)</h2>
               <div className="job-table-container">
-                <table className="job-table">
-                  <thead>
-                    <tr>
-                      <th>Job Title / Company</th>
-                      <th>Date Applied</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentApplications.map(app => (
-                      <tr key={app.id}>
-                        <td>
-                          <p className="job-title-text">{app.title}</p>
-                          <p className="job-location-text">{app.company}</p>
-                        </td>
-                        <td style={{ color: '#4b5563', fontSize: '0.9rem' }}>{app.date}</td>
-                        <td>
-                          <span className={`status-badge ${getStatusClass(app.status)}`}>
-                            {app.status}
-                          </span>
-                        </td>
+                {applications.length > 0 ? (
+                  <table className="job-table">
+                    <thead>
+                      <tr>
+                        <th>Job Title / Company</th>
+                        <th>Location</th>
+                        <th>Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {applications.slice(0, 5).map(app => (
+                        <tr key={app.app_id}>
+                          <td>
+                            <p className="job-title-text">{app.job_title || `Job #${app.job_id}`}</p>
+                            <p className="job-location-text">{app.company_name || `Company #${app.company_id}`}</p>
+                          </td>
+                          <td style={{ color: '#4b5563', fontSize: '0.9rem' }}>{app.job_location || 'N/A'}</td>
+                          <td>
+                            <span className={`status-badge ${getStatusClass(app.status)}`}>
+                              {formatStatus(app.status)}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <p style={{ padding: '1.5rem', color: '#6b7280', margin: 0 }}>
+                    You haven't submitted any job applications yet. Browse active job listings to get started!
+                  </p>
+                )}
               </div>
             </div>
 
@@ -171,18 +200,28 @@ const CandidateDashboard = () => {
             <div>
               <h2 className="section-title" style={{ fontSize: '1.25rem' }}>Saved Jobs (Bookmarked)</h2>
               <div className="saved-listings-list">
-                {savedJobs.map(job => (
-                  <div key={job.id} className="saved-card">
-                    <div className="saved-job-info">
-                      <h4 className="saved-job-title">{job.title}</h4>
-                      <p className="saved-company">{job.company} • {job.location}</p>
-                      <p style={{ margin: 0, fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.25rem' }}>
-                        Saved {job.savedAgo}
-                      </p>
+                {savedJobs.length > 0 ? (
+                  savedJobs.slice(0, 5).map(job => (
+                    <div key={job.job_id || job.id} className="saved-card">
+                      <div className="saved-job-info">
+                        <h4 className="saved-job-title">{job.job_title || job.title}</h4>
+                        <p className="saved-company">
+                          {job.company_name || job.company}{job.job_location || job.location ? ` • ${job.job_location || job.location}` : ''}
+                        </p>
+                      </div>
+                      <button 
+                        className="primary-btn"
+                        onClick={() => navigate(`/jobs/${job.job_id || job.id}`)}
+                      >
+                        Apply
+                      </button>
                     </div>
-                    <button className="primary-btn">Apply</button>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p style={{ padding: '1.5rem', color: '#6b7280', margin: 0, backgroundColor: '#fff', borderRadius: '0.5rem', border: '1px solid #e2e8f0' }}>
+                    No bookmarked jobs saved.
+                  </p>
+                )}
               </div>
             </div>
 
@@ -190,16 +229,95 @@ const CandidateDashboard = () => {
         </>
       )}
 
-      {/* Stubs for the other tabs */}
+      {/* Full Applications Tab */}
       {activeTab === 'applications' && (
-        <div className="base-card">
-          <p>Full application history will appear here.</p>
+        <div className="job-table-container">
+          {applications.length > 0 ? (
+            <table className="job-table">
+              <thead>
+                <tr>
+                  <th>Job Title / Company</th>
+                  <th>Location</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {applications.map(app => (
+                  <tr key={app.app_id}>
+                    <td>
+                      <p className="job-title-text">{app.job_title || `Job #${app.job_id}`}</p>
+                      <p className="job-location-text">{app.company_name || `Company #${app.company_id}`}</p>
+                    </td>
+                    <td style={{ color: '#4b5563', fontSize: '0.9rem' }}>{app.job_location || 'N/A'}</td>
+                    <td>
+                      <span className={`status-badge ${getStatusClass(app.status)}`}>
+                        {formatStatus(app.status)}
+                      </span>
+                    </td>
+                    <td>
+                      <button 
+                        className="secondary-btn"
+                        style={{ padding: '0.35rem 0.75rem', fontSize: '0.85rem' }}
+                        onClick={() => navigate(`/jobs/${app.job_id}`)}
+                      >
+                        View Job
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <div className="base-card" style={{ padding: '2rem', textAlign: 'center' }}>
+              <p style={{ color: '#6b7280' }}>You have not submitted any applications yet.</p>
+              <button className="primary-btn" onClick={() => navigate('/jobs')}>
+                Browse Jobs
+              </button>
+            </div>
+          )}
         </div>
       )}
 
+      {/* Full Saved Jobs Tab */}
       {activeTab === 'saved' && (
-        <div className="base-card">
-          <p>Full list of bookmarked jobs will appear here.</p>
+        <div>
+          {savedJobs.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {savedJobs.map(job => (
+                <div key={job.job_id || job.id} className="saved-card" style={{ padding: '1.25rem', backgroundColor: '#fff', borderRadius: '0.5rem', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div className="saved-job-info">
+                    <h4 className="saved-job-title" style={{ fontSize: '1.1rem', margin: '0 0 0.25rem 0' }}>{job.job_title || job.title}</h4>
+                    <p className="saved-company" style={{ color: '#475569', margin: 0 }}>
+                      {job.company_name || job.company}{job.job_location || job.location ? ` • ${job.job_location || job.location}` : ''}
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button 
+                      className="primary-btn"
+                      onClick={() => navigate(`/jobs/${job.job_id || job.id}`)}
+                    >
+                      View & Apply
+                    </button>
+                    <button 
+                      className="secondary-btn"
+                      style={{ color: '#ef4444', borderColor: '#fca5a5' }}
+                      onClick={() => handleRemoveSaved(job.job_id || job.id)}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="base-card" style={{ padding: '2rem', textAlign: 'center' }}>
+              <p style={{ color: '#6b7280' }}>You have no bookmarked jobs.</p>
+              <button className="primary-btn" onClick={() => navigate('/jobs')}>
+                Explore Opportunities
+              </button>
+            </div>
+          )}
         </div>
       )}
 
