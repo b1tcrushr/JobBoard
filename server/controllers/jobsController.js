@@ -24,7 +24,10 @@ async function getJobByEmployer(req, res) {
 
     try {
         const [rows] = await db.query(
-            "SELECT job_id, employer_id, company_id, job_title, job_location, work_type, job_type, job_description, job_status, experience_level, role_type, pay_grade, requirements, responsibilities, benefits FROM job_postings WHERE employer_id = ?",
+            `SELECT j.job_id, j.employer_id, j.company_id, j.job_title, j.job_location, j.work_type, j.job_type, j.job_description, j.job_status, j.experience_level, j.role_type, j.pay_grade, j.requirements, j.responsibilities, j.benefits, c.company_name
+             FROM job_postings j
+             JOIN companies c ON j.company_id = c.company_id
+             WHERE j.employer_id = ?`,
             [employer_id]
         );
         res.json(rows);
@@ -35,7 +38,7 @@ async function getJobByEmployer(req, res) {
 }
 
 async function getJobById(req, res) {
-    const { job_id } = req.body;
+    const job_id = req.params.id || req.params.job_id || req.body.job_id;
 
     if (!job_id) {
         return res.status(400).json({ error: "job_id is required" });

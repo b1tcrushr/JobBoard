@@ -19,7 +19,9 @@ CREATE TABLE users (
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    role ENUM('candidate', 'employer', 'admin') NOT NULL
+    role ENUM('candidate', 'employer', 'admin') NOT NULL,
+    phone VARCHAR(255),
+    location VARCHAR(255)
 );
 
 -- employer table
@@ -29,8 +31,8 @@ CREATE TABLE employers (
     company_id INT NOT NULL,
     email VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(user_id),
-    FOREIGN KEY (company_id) REFERENCES companies(company_id)
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (company_id) REFERENCES companies(company_id) ON DELETE CASCADE
 );
 
 -- candidate table
@@ -42,7 +44,7 @@ CREATE TABLE candidates (
     applications_sent INT NOT NULL DEFAULT 0,
     interviews_scheduled INT NOT NULL DEFAULT 0,
     not_selected INT NOT NULL DEFAULT 0,
-    FOREIGN KEY (user_id) REFERENCES users(user_id)
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
 -- job postings table
@@ -62,8 +64,11 @@ CREATE TABLE job_postings (
     requirements TEXT,
     responsibilities TEXT,
     benefits TEXT,
-    FOREIGN KEY (employer_id) REFERENCES employers(employer_id),
-    FOREIGN KEY (company_id) REFERENCES companies(company_id)
+    INDEX idx_jobs_status (job_status),
+    INDEX idx_jobs_employer (employer_id),
+    INDEX idx_jobs_company (company_id),
+    FOREIGN KEY (employer_id) REFERENCES employers(employer_id) ON DELETE CASCADE,
+    FOREIGN KEY (company_id) REFERENCES companies(company_id) ON DELETE CASCADE
 );
 
 -- application table for who applied to what
@@ -76,7 +81,9 @@ CREATE TABLE applications (
     resume_text TEXT,
     cover_letter TEXT,
     UNIQUE (candidate_id, job_id),
-    FOREIGN KEY (job_id) REFERENCES job_postings(job_id),
-    FOREIGN KEY (company_id) REFERENCES companies(company_id),
-    FOREIGN KEY (candidate_id) REFERENCES candidates(candidate_id)
+    INDEX idx_applications_candidate (candidate_id),
+    INDEX idx_applications_job (job_id),
+    FOREIGN KEY (job_id) REFERENCES job_postings(job_id) ON DELETE CASCADE,
+    FOREIGN KEY (company_id) REFERENCES companies(company_id) ON DELETE CASCADE,
+    FOREIGN KEY (candidate_id) REFERENCES candidates(candidate_id) ON DELETE CASCADE
 );

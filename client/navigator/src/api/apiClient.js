@@ -7,7 +7,16 @@ async function request(path, options = {}) {
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
   const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
-  const data = await res.json();
+  const data = await res.json().catch(() => ({}));
+
+  if ((res.status === 401 || res.status === 403) && (data.error === "Access token required" || data.error === "Invalid or expired token")) {
+    if (token) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.dispatchEvent(new Event("auth_logout"));
+    }
+  }
+
   if (!res.ok) throw new Error(data.error || "Request failed");
   return data;
 }

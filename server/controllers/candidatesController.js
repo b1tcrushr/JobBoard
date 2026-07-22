@@ -2,7 +2,15 @@ const db = require("../db");
 
 async function getAllCandidates(req, res) {
     try {
-        const [rows] = await db.query("SELECT candidate_id, user_id, email, name, applications_sent, interviews_scheduled, not_selected FROM candidates");
+        const [rows] = await db.query(
+            `SELECT c.candidate_id, c.user_id, c.email, c.name,
+                    COUNT(a.app_id) AS applications_sent,
+                    SUM(CASE WHEN LOWER(a.status) IN ('interview', 'accepted') THEN 1 ELSE 0 END) AS interviews_scheduled,
+                    SUM(CASE WHEN LOWER(a.status) = 'rejected' THEN 1 ELSE 0 END) AS not_selected
+             FROM candidates c
+             LEFT JOIN applications a ON c.candidate_id = a.candidate_id
+             GROUP BY c.candidate_id`
+        );
         res.json(rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -12,7 +20,14 @@ async function getAllCandidates(req, res) {
 async function getCandidateById(req, res) {
     try {
         const [rows] = await db.query(
-            "SELECT candidate_id, user_id, email, name, applications_sent, interviews_scheduled, not_selected FROM candidates WHERE candidate_id = ?",
+            `SELECT c.candidate_id, c.user_id, c.email, c.name,
+                    COUNT(a.app_id) AS applications_sent,
+                    SUM(CASE WHEN LOWER(a.status) IN ('interview', 'accepted') THEN 1 ELSE 0 END) AS interviews_scheduled,
+                    SUM(CASE WHEN LOWER(a.status) = 'rejected' THEN 1 ELSE 0 END) AS not_selected
+             FROM candidates c
+             LEFT JOIN applications a ON c.candidate_id = a.candidate_id
+             WHERE c.candidate_id = ?
+             GROUP BY c.candidate_id`,
             [req.params.id]
         );
 

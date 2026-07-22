@@ -5,7 +5,7 @@ import { api } from "../api/apiClient.js";
 import "../styles/manageAccount.css";
 
 function ManageAccount() {
-  const { user } = useAuth();
+  const { user, login } = useAuth();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -40,8 +40,24 @@ function ManageAccount() {
         ...prev,
         firstName,
         lastName,
-        email: user.email || ""
+        email: user.email || "",
+        phone: user.phone || "",
+        location: user.location || ""
       }));
+
+      if (user.id) {
+        api.get(`/api/users/${user.id}`)
+          .then(uData => {
+            if (uData) {
+              setFormData(prev => ({
+                ...prev,
+                phone: uData.phone || "",
+                location: uData.location || ""
+              }));
+            }
+          })
+          .catch(() => {});
+      }
 
       if (user.role === 'employer' && user.id) {
         api.get(`/api/employers/user/${user.id}`)
@@ -71,29 +87,73 @@ function ManageAccount() {
     e.preventDefault();
     setMessage("");
 
-    if (formData.newPassword && formData.newPassword !== formData.confirmPassword) {
-      setMessage("New passwords do not match.");
-      setMessageType("error");
-      return;
+    if (formData.newPassword) {
+      if (!formData.currentPassword) {
+        setMessage("Please enter your current password to change your password.");
+        setMessageType("error");
+        return;
+      }
+      if (formData.newPassword !== formData.confirmPassword) {
+        setMessage("New passwords do not match.");
+        setMessageType("error");
+        return;
+      }
+      if (formData.newPassword.length < 8) {
+        setMessage("New password must be at least 8 characters long.");
+        setMessageType("error");
+        return;
+      }
     }
 
     setSaving(true);
 
     try {
-      if (isEmployer && user?.id) {
-        await api.patch(`/api/employers/user/${user.id}`, {
-          company_name: formData.companyName,
-          company_size: formData.companySize,
-          company_website: formData.companyWebsite,
-          industry: formData.industry,
-          company_description: formData.companyDescription,
-          headquarters_location: formData.headquartersLocation,
+      if (user?.id) {
+        // 1. Update User account (Name, Email, Phone, Location, Password)
+        const updatedRes = await api.patch(`/api/users/${user.id}`, {
           name: `${formData.firstName} ${formData.lastName}`.trim(),
-          email: formData.email
+          email: formData.email,
+          phone: formData.phone,
+          location: formData.location,
+          currentPassword: formData.currentPassword || undefined,
+          newPassword: formData.newPassword || undefined
         });
+
+        // 2. If Employer, also update company profile details
+        if (isEmployer) {
+          await api.patch(`/api/employers/user/${user.id}`, {
+            company_name: formData.companyName,
+            company_size: formData.companySize,
+            company_website: formData.companyWebsite,
+            industry: formData.industry,
+            company_description: formData.companyDescription,
+            headquarters_location: formData.headquartersLocation,
+            name: `${formData.firstName} ${formData.lastName}`.trim(),
+            email: formData.email
+          });
+        }
+
+        // 3. Sync AuthContext state with updated user details
+        if (updatedRes?.user) {
+          const currentToken = localStorage.getItem("token");
+          login({
+            ...user,
+            name: updatedRes.user.name,
+            email: updatedRes.user.email,
+            phone: updatedRes.user.phone,
+            location: updatedRes.user.location
+          }, currentToken);
+        }
       }
 
-      setMessage("Account and company details saved successfully.");
+      setFormData(prev => ({
+        ...prev,
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: ""
+      }));
+
+      setMessage("Account details saved successfully.");
       setMessageType("success");
     } catch (err) {
       setMessage(err.message || "Failed to update account details.");

@@ -2,9 +2,23 @@ const db = require("../db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
+async function ensureUserColumns() {
+    try {
+        await db.query("ALTER TABLE users ADD COLUMN phone VARCHAR(255)");
+    } catch (e) {
+        // Column already exists or table alter handled
+    }
+    try {
+        await db.query("ALTER TABLE users ADD COLUMN location VARCHAR(255)");
+    } catch (e) {
+        // Column already exists or table alter handled
+    }
+}
+ensureUserColumns();
+
 async function getAllUsers(req, res) {
     try {
-        const [rows] = await db.query("SELECT user_id, name, email, role FROM users");
+        const [rows] = await db.query("SELECT user_id, name, email, role, phone, location FROM users");
         res.json(rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -13,8 +27,9 @@ async function getAllUsers(req, res) {
 
 async function getUsersById(req, res) {
     try {
+        await ensureUserColumns();
         const [rows] = await db.query(
-            "SELECT user_id, name, email, role FROM users WHERE user_id = ?",
+            "SELECT user_id, name, email, role, phone, location FROM users WHERE user_id = ?",
             [req.params.id]
         );
 
@@ -27,8 +42,6 @@ async function getUsersById(req, res) {
         res.status(500).json({ error: err.message });
     }
 }
-
-
 
 async function createUser(req, res) {
     const { name, email, password, role, company_name, industry, headquarters_location } = req.body;
@@ -113,7 +126,7 @@ async function loginUser(req, res) {
 
     try {
         const [rows] = await db.query(
-            "SELECT user_id, name, email, password_hash, role FROM users WHERE email = ?",
+            "SELECT user_id, name, email, password_hash, role, phone, location FROM users WHERE email = ?",
             [email]
         );
 
@@ -135,7 +148,6 @@ async function loginUser(req, res) {
             { expiresIn: "7d" }
         );
 
-
         res.json({
             message: "Logged in successfully",
             jwtToken,
@@ -143,16 +155,90 @@ async function loginUser(req, res) {
                 id: user.user_id,
                 name: user.name,
                 email: user.email,
-                role: user.role
+                role: user.role,
+                phone: user.phone || "",
+                location: user.location || ""
             }
         });
-
-
     }
     catch (err) {
          res.status(500).json({ error: err.message });
     }
 }
 
+async function updateUser(req, res) {
+    const { user_id } = req.params;
+    const { name, email, phone, location, currentPassword, newPassword } = req.body;
 
-module.exports = { getAllUsers, getUsersById, createUser, loginUser };
+    try {
+        await ensureUserColumns();
+        const [rows] = await db.query(
+            "SELECT user_id, name, email, password_hash, role, phone, location FROM users WHERE user_id = ?",
+            [user_id]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        const user = rows[0];
+
+        // Validate and update password
+        if (newPassword) {
+            if (!currentPassword) {
+                return res.status(400).json({ error: "Current password is required to change password" });
+            }
+
+            const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
+            if (!isMatch) {
+                return res.status(400).json({ error: "Current password is incorrect" });
+            }
+
+            if (newPassword.length < 8) {
+                return res.status(400).json({ error: "New password must be at least 8 characters long" });
+            }
+
+            const newHash = await bcrypt.hash(newPassword, 10);
+            await db.query("UPDATE users SET password_hash = ? WHERE user_id = ?", [newHash, user_id]);
+        }
+
+        // Update user fields across tables
+        const updatedName = name ? name.trim() : user.name;
+        const updatedEmail = email ? email.trim() : user.email;
+        const updatedPhone = phone !== undefined ? phone.trim() : (user.phone || "");
+        const updatedLocation = location !== undefined ? location.trim() : (user.location || "");
+
+        if (email && email.trim() !== user.email) {
+            const [existing] = await db.query(
+                "SELECT user_id FROM users WHERE email = ? AND user_id != ?",
+                [email.trim(), user_id]
+            );
+            if (existing.length > 0) {
+                return res.status(409).json({ error: "Email is already in use by another account" });
+            }
+        }
+
+        await db.query(
+            "UPDATE users SET name = ?, email = ?, phone = ?, location = ? WHERE user_id = ?",
+            [updatedName, updatedEmail, updatedPhone, updatedLocation, user_id]
+        );
+        await db.query("UPDATE candidates SET name = ?, email = ? WHERE user_id = ?", [updatedName, updatedEmail, user_id]);
+        await db.query("UPDATE employers SET name = ?, email = ? WHERE user_id = ?", [updatedName, updatedEmail, user_id]);
+
+        res.json({
+            message: "Account updated successfully",
+            user: {
+                id: user.user_id,
+                name: updatedName,
+                email: updatedEmail,
+                role: user.role,
+                phone: updatedPhone,
+                location: updatedLocation
+            }
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}
+
+module.exports = { getAllUsers, getUsersById, createUser, loginUser, updateUser };

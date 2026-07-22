@@ -78,6 +78,10 @@ async function updateEmployerByUserId(req, res) {
                 [name, email, user_id]
             );
             await db.query(
+                `UPDATE candidates SET name = COALESCE(?, name), email = COALESCE(?, email) WHERE user_id = ?`,
+                [name, email, user_id]
+            );
+            await db.query(
                 `UPDATE users SET name = COALESCE(?, name), email = COALESCE(?, email) WHERE user_id = ?`,
                 [name, email, user_id]
             );

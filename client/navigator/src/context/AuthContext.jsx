@@ -10,6 +10,12 @@ export function AuthProvider({ children }) {
     const stored = localStorage.getItem("user");
     if (stored) setUser(JSON.parse(stored));
     setLoading(false);
+
+    function handleAuthLogout() {
+      setUser(null);
+    }
+    window.addEventListener("auth_logout", handleAuthLogout);
+    return () => window.removeEventListener("auth_logout", handleAuthLogout);
   }, []);
 
   function login(userData, token) {

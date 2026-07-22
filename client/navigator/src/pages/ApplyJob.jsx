@@ -9,22 +9,19 @@ function ApplyJob() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const selectedJob = location.state?.job || {
-    job_id: 1,
-    id: 1,
-    job_title: "Software Engineer",
-    title: "Software Engineer",
-    company_name: "Tech Solutions",
-    company: "Tech Solutions",
-    company_id: 1,
-    job_location: "Remote",
-    location: "Remote",
-    role_type: "Full-Time",
-    type: "Full-Time",
-    pay_grade: "Grade 1",
-    salary: "Grade 1",
-    job_description: "Build and maintain user interfaces and backend services."
-  };
+  const queryJobId = new URLSearchParams(location.search).get("job_id");
+  const [selectedJob, setSelectedJob] = useState(location.state?.job || null);
+  const [fetchingJob, setFetchingJob] = useState(!location.state?.job && !!queryJobId);
+
+  useEffect(() => {
+    if (!selectedJob && queryJobId) {
+      setFetchingJob(true);
+      api.get(`/api/jobs/${queryJobId}`)
+        .then(job => setSelectedJob(job))
+        .catch(() => setSelectedJob(null))
+        .finally(() => setFetchingJob(false));
+    }
+  }, [queryJobId, selectedJob]);
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -49,10 +46,24 @@ function ApplyJob() {
         ...prev,
         firstName,
         lastName,
-        email: user.email || ""
+        email: user.email || "",
+        phone: user.phone || prev.phone || ""
       }));
 
-      const jobId = selectedJob.job_id || selectedJob.id;
+      if (user.id) {
+        api.get(`/api/users/${user.id}`)
+          .then(uData => {
+            if (uData && uData.phone) {
+              setFormData(prev => ({
+                ...prev,
+                phone: uData.phone
+              }));
+            }
+          })
+          .catch(() => {});
+      }
+
+      const jobId = selectedJob?.job_id || selectedJob?.id;
       if (jobId && user.id) {
         api.get(`/api/applications/user/${user.id}`)
           .then(apps => {
@@ -71,6 +82,7 @@ function ApplyJob() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    if (!selectedJob) return;
     setError("");
     setSubmitting(true);
 
@@ -104,6 +116,33 @@ function ApplyJob() {
           <Link to="/login">
             <button className="common-button" style={{ padding: "0.75rem 2rem", fontSize: "1rem" }}>
               Sign In / Register
+            </button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (fetchingJob) {
+    return (
+      <div className="apply-container" style={{ textAlign: "center", padding: "3rem 1rem" }}>
+        <p style={{ color: "#94a3b8" }}>Loading job details...</p>
+      </div>
+    );
+  }
+
+  if (!selectedJob) {
+    return (
+      <div className="apply-container" style={{ textAlign: "center", padding: "3rem 1rem" }}>
+        <div className="apply-form-card" style={{ maxWidth: "500px", margin: "2rem auto", padding: "2rem" }}>
+          <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>📋</div>
+          <h2 style={{ fontSize: "1.5rem", color: "#1e293b", marginBottom: "0.5rem" }}>No Job Selected</h2>
+          <p style={{ fontSize: "1rem", color: "#64748b", marginBottom: "1.5rem" }}>
+            Please select a job listing to submit your application.
+          </p>
+          <Link to="/jobs">
+            <button className="common-button" style={{ padding: "0.75rem 2rem", fontSize: "1rem" }}>
+              Browse Job Listings
             </button>
           </Link>
         </div>
