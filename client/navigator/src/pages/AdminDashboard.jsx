@@ -26,6 +26,11 @@ export default function AdminDashboard() {
   const [jobSearch, setJobSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
+  // Applicants Modal State
+  const [viewingApplicantsJob, setViewingApplicantsJob] = useState(null);
+  const [jobApplications, setJobApplications] = useState([]);
+  const [loadingApps, setLoadingApps] = useState(false);
+
   // Edit Modals State
   const [editingUser, setEditingUser] = useState(null);
   const [userForm, setUserForm] = useState({
@@ -120,6 +125,27 @@ export default function AdminDashboard() {
     }).finally(() => setLoading(false));
   }
 
+  // --- View Applicants Handler ---
+  function openApplicantsModal(job) {
+    setViewingApplicantsJob(job);
+    setLoadingApps(true);
+    api.get(`/api/applications/job/${job.job_id}`)
+      .then(data => setJobApplications(Array.isArray(data) ? data : []))
+      .catch(err => setError(err.message || "Failed to load job applications."))
+      .finally(() => setLoadingApps(false));
+  }
+
+  async function handleUpdateAppStatus(appId, newStatus) {
+    try {
+      await api.patch(`/api/applications/${appId}`, { status: newStatus });
+      setJobApplications(prev => prev.map(a => a.app_id === appId ? { ...a, status: newStatus } : a));
+      setActionSuccess(`Application status updated to "${newStatus}".`);
+      setTimeout(() => setActionSuccess(""), 4000);
+    } catch (err) {
+      setError(err.message || "Failed to update application status.");
+    }
+  }
+
   // --- Apply Candidate Handler ---
   function openApplyCandidateModal(targetJob = null, targetCandidate = null) {
     setApplyForm({
@@ -155,6 +181,10 @@ export default function AdminDashboard() {
 
       setActionSuccess(`Application submitted successfully for candidate "${selectedCand?.name || "Candidate"}" to job "${selectedJobObj?.job_title || "Job"}".`);
       setApplyingCandidate(false);
+      
+      if (viewingApplicantsJob && String(viewingApplicantsJob.job_id) === String(applyForm.job_id)) {
+        openApplicantsModal(viewingApplicantsJob);
+      }
       setTimeout(() => setActionSuccess(""), 4000);
     } catch (err) {
       setError(err.message || "Failed to submit application.");
@@ -489,11 +519,8 @@ export default function AdminDashboard() {
       <div className="admin-header-section">
         <div>
           <h1 className="admin-title">Admin Console</h1>
-          <p className="admin-subtitle">Manage accounts, view & edit job postings, and apply candidate accounts to openings</p>
+          <p className="admin-subtitle">Manage accounts, view applicants, manage interview statuses, and moderate job postings</p>
         </div>
-        <button className="admin-action-btn admin-btn-toggle" onClick={loadDashboardData} style={{ padding: "0.6rem 1.2rem" }}>
-          🔄 Refresh Data
-        </button>
       </div>
 
       {error && <div className="auth-error" style={{ marginBottom: "1.5rem" }}>{error}</div>}
@@ -580,14 +607,6 @@ export default function AdminDashboard() {
             </select>
 
             <button
-              className="admin-action-btn admin-btn-toggle"
-              style={{ padding: "0.6rem 1.2rem", fontSize: "0.9rem", whitespace: "nowrap" }}
-              onClick={() => openApplyCandidateModal()}
-            >
-              📝 Apply Candidate to Job
-            </button>
-
-            <button
               className="common-button"
               style={{ padding: "0.6rem 1.2rem", fontSize: "0.9rem", whitespace: "nowrap" }}
               onClick={() => setCreatingJob(true)}
@@ -634,20 +653,18 @@ export default function AdminDashboard() {
                             View
                           </Link>
                           <button
+                            className="admin-action-btn admin-btn-toggle"
+                            style={{ background: "#f0fdf4", color: "#166534", borderColor: "#bbf7d0" }}
+                            onClick={() => openApplicantsModal(job)}
+                          >
+                            View Applicants
+                          </button>
+                          <button
                             className="admin-action-btn admin-btn-edit"
                             onClick={() => openJobEdit(job)}
                           >
                             Edit
                           </button>
-                          {isOpen && (
-                            <button
-                              className="admin-action-btn admin-btn-toggle"
-                              style={{ background: "#e0f2fe", color: "#0369a1", borderColor: "#bae6fd" }}
-                              onClick={() => openApplyCandidateModal(job)}
-                            >
-                              Apply Candidate
-                            </button>
-                          )}
                           <button
                             className="admin-action-btn admin-btn-toggle"
                             onClick={() => handleToggleJobStatus(job.job_id, job.job_status)}
@@ -774,6 +791,99 @@ export default function AdminDashboard() {
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* --- VIEW APPLICANTS MODAL --- */}
+      {viewingApplicantsJob && (
+        <div className="admin-modal-overlay" onClick={() => setViewingApplicantsJob(null)}>
+          <div className="admin-modal-card" onClick={e => e.stopPropagation()} style={{ maxWidth: "750px" }}>
+            <div className="admin-modal-header">
+              <div>
+                <h2>Applicants for #{viewingApplicantsJob.job_id} - {viewingApplicantsJob.job_title}</h2>
+                <p style={{ margin: "0.25rem 0 0 0", color: "#64748b", fontSize: "0.9rem" }}>
+                  Company: {viewingApplicantsJob.company_name || "—"} | Status: <span className={`status-badge ${viewingApplicantsJob.job_status?.toLowerCase()}`}>{viewingApplicantsJob.job_status}</span>
+                </p>
+              </div>
+              <button className="admin-modal-close" onClick={() => setViewingApplicantsJob(null)}>✕</button>
+            </div>
+
+            {loadingApps ? (
+              <p style={{ textAlign: "center", color: "#64748b", padding: "2rem" }}>Loading applicants...</p>
+            ) : jobApplications.length > 0 ? (
+              <div>
+                {jobApplications.map(app => {
+                  const currentStatus = (app.status || "applied").toLowerCase();
+                  return (
+                    <div key={app.app_id} className="applicant-card">
+                      <div className="applicant-header">
+                        <div>
+                          <h3 className="applicant-name">{app.name}</h3>
+                          <p className="applicant-email">{app.email}</p>
+                        </div>
+                        <span className={`status-badge ${currentStatus}`}>
+                          {app.status}
+                        </span>
+                      </div>
+
+                      {(app.resume_text || app.cover_letter) && (
+                        <div className="applicant-details">
+                          {app.resume_text && (
+                            <div style={{ marginBottom: app.cover_letter ? "0.5rem" : "0" }}>
+                              <strong>Resume Details:</strong> {app.resume_text}
+                            </div>
+                          )}
+                          {app.cover_letter && (
+                            <div>
+                              <strong>Cover Letter:</strong> {app.cover_letter}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="applicant-actions">
+                        <button
+                          className="admin-action-btn btn-interview"
+                          onClick={() => handleUpdateAppStatus(app.app_id, "interview")}
+                          disabled={currentStatus === "interview"}
+                        >
+                          📅 Schedule Interview
+                        </button>
+                        <button
+                          className="admin-action-btn btn-accept"
+                          onClick={() => handleUpdateAppStatus(app.app_id, "accepted")}
+                          disabled={currentStatus === "accepted"}
+                        >
+                          ✅ Accept / Offer
+                        </button>
+                        <button
+                          className="admin-action-btn btn-decline"
+                          onClick={() => handleUpdateAppStatus(app.app_id, "rejected")}
+                          disabled={currentStatus === "rejected"}
+                        >
+                          ❌ Decline / Reject
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div style={{ textAlign: "center", padding: "2.5rem 1rem", color: "#94a3b8" }}>
+                <p style={{ fontSize: "1.05rem", margin: "0" }}>No candidates have applied to this job posting yet.</p>
+              </div>
+            )}
+
+            <div className="admin-modal-actions" style={{ marginTop: "1.5rem" }}>
+              <button
+                type="button"
+                className="admin-action-btn"
+                onClick={() => setViewingApplicantsJob(null)}
+              >
+                Close Window
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -77,10 +77,11 @@ async function getAllApplicationsByJob(req, res) {
 
     try {
         const [rows] = await db.query(
-            `SELECT a.app_id, a.job_id, a.company_id, a.candidate_id, a.status, c.name, c.email
+            `SELECT a.app_id, a.job_id, a.company_id, a.candidate_id, a.status, a.resume_text, a.cover_letter, c.name, c.email
              FROM applications a
              JOIN candidates c ON a.candidate_id = c.candidate_id
-             WHERE a.job_id = ?`,
+             WHERE a.job_id = ?
+             ORDER BY a.app_id DESC`,
             [job_id]
         );
         res.json(rows);
