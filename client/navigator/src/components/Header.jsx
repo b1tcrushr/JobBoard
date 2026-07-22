@@ -27,25 +27,26 @@ function Header() {
         <Link to="/">Home</Link>
         <p> | </p>
         <Link to="/jobs">Jobs</Link>
-        <p> | </p>
-        <Link to="/dashboard">Applications</Link>
+        {user && (
+          <>
+            <p> | </p>
+            <Link to="/dashboard">Dashboard</Link>
+          </>
+        )}
       </nav>
 
       <div className="header-right">
         {user ? (
           <>
-            <div className="profile" title={user.name}>{initials}</div>
+            <Link to="/account" style={{ textDecoration: "none" }}>
+              <div className="profile" title={`Manage Account (${user.name})`}>{initials}</div>
+            </Link>
             <button className="common-button" onClick={handleLogout}>Sign out</button>
           </>
         ) : (
-          <>
-          <Link to="/account">
-            <button className="profile">M</button>
-          </Link>
           <Link to="/login">
             <button className="common-button">Login / Register</button>
           </Link>
-          </>
         )}
       </div>
     </header>

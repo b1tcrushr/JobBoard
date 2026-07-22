@@ -7,7 +7,10 @@ CREATE TABLE companies (
     company_id INT PRIMARY KEY AUTO_INCREMENT,
     company_name VARCHAR(255) NOT NULL,
     industry VARCHAR(255),
-    headquarters_location VARCHAR(255)
+    headquarters_location VARCHAR(255),
+    company_size VARCHAR(255),
+    company_website VARCHAR(255),
+    company_description TEXT
 );
 
 -- users table. links to employers table and candidates table
@@ -70,6 +73,8 @@ CREATE TABLE applications (
     company_id INT NOT NULL,
     candidate_id INT NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'applied',
+    resume_text TEXT,
+    cover_letter TEXT,
     UNIQUE (candidate_id, job_id),
     FOREIGN KEY (job_id) REFERENCES job_postings(job_id),
     FOREIGN KEY (company_id) REFERENCES companies(company_id),

@@ -11,7 +11,11 @@ const Jobs = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  //Filters
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const JOBS_PER_PAGE = 20;
+
+  // Filters
   const navigate = useNavigate();
   const [keyword, setKeyword] = useState('');
   const [location, setLocation] = useState('');
@@ -24,8 +28,9 @@ const Jobs = () => {
   useEffect(() => {
     api.get("/api/jobs")
       .then(data => {
-        setJobs(data);
-        setFilteredJobs(data);
+        const jobList = Array.isArray(data) ? data : [];
+        setJobs(jobList);
+        setFilteredJobs(jobList);
       })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
@@ -35,8 +40,8 @@ const Jobs = () => {
     e.preventDefault();
     
     const results = jobs.filter(job => {
-      const matchKeyword = job.job_title.toLowerCase().includes(keyword.toLowerCase()) ||
-                           job.company_name.toLowerCase().includes(keyword.toLowerCase());
+      const matchKeyword = (job.job_title || '').toLowerCase().includes(keyword.toLowerCase()) ||
+                           (job.company_name || '').toLowerCase().includes(keyword.toLowerCase());
       const matchLocation = (job.job_location || '').toLowerCase().includes(location.toLowerCase());
       const matchExperience = experience === '' || job.experience_level === experience;
       const matchRoleType = roleType === '' || job.role_type === roleType;
@@ -46,6 +51,7 @@ const Jobs = () => {
     });
 
     setFilteredJobs(results);
+    setCurrentPage(1);
   };
 
   const clearFilters = () => {
@@ -55,7 +61,14 @@ const Jobs = () => {
     setRoleType('');
     setPayGrade('');
     setFilteredJobs(jobs);
+    setCurrentPage(1);
   };
+
+  // Pagination calculations
+  const totalPages = Math.max(1, Math.ceil(filteredJobs.length / JOBS_PER_PAGE));
+  const indexOfLastJob = currentPage * JOBS_PER_PAGE;
+  const indexOfFirstJob = indexOfLastJob - JOBS_PER_PAGE;
+  const currentJobs = filteredJobs.slice(indexOfFirstJob, indexOfLastJob);
 
   return (
     <div className="page-container">
@@ -116,7 +129,7 @@ const Jobs = () => {
           
           {filteredJobs.length > 0 ? (
             <div className="job-list">
-              {filteredJobs.map(job => (
+              {currentJobs.map(job => (
                 <div key={job.job_id} className="job-card">
                   <div className="job-info">
                     <h4 className="job-title">{job.job_title}</h4>
@@ -124,7 +137,7 @@ const Jobs = () => {
                       <span className="highlight-blue">{job.company_name}</span> • {job.job_location}
                     </p>
                     <p className="job-details-text">
-                      Experience: {job.experience_level} • {job.role_type} • {job.pay_grade}
+                      Experience: {job.experience_level || 'Entry Level'} • {job.role_type || job.job_type} • {job.pay_grade || 'Grade 1'}
                     </p>
                   </div>
                   
@@ -132,14 +145,35 @@ const Jobs = () => {
                     className="primary-btn"
                     onClick={() => navigate(`/jobs/${job.job_id}`)}
                   >
-                    View & Apply
+                    View Details
                   </button>
                   
                 </div>
               ))}
               
-              <div className="pagination">
-                <span>◀ Page 1 of 12 ▶</span>
+              {/* Dynamic Pagination Bar */}
+              <div className="pagination" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginTop: '2rem' }}>
+                <button 
+                  className="secondary-btn"
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  style={{ padding: '0.4rem 1rem', opacity: currentPage === 1 ? 0.5 : 1, cursor: currentPage === 1 ? 'default' : 'pointer' }}
+                >
+                  ◀ Previous
+                </button>
+
+                <span style={{ fontSize: '0.95rem', fontWeight: '600', color: '#475569' }}>
+                  Page {currentPage} of {totalPages} ({filteredJobs.length} Job{filteredJobs.length === 1 ? '' : 's'})
+                </span>
+
+                <button 
+                  className="secondary-btn"
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  style={{ padding: '0.4rem 1rem', opacity: currentPage === totalPages ? 0.5 : 1, cursor: currentPage === totalPages ? 'default' : 'pointer' }}
+                >
+                  Next ▶
+                </button>
               </div>
             </div>
           ) : (
