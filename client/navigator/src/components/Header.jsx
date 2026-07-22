@@ -30,7 +30,9 @@ function Header() {
         {user && (
           <>
             <p> | </p>
-            <Link to="/dashboard">Dashboard</Link>
+            <Link to="/dashboard">
+              {user.role === "admin" ? "Admin Console" : "Dashboard"}
+            </Link>
           </>
         )}
       </nav>

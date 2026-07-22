@@ -34,6 +34,15 @@ async function createApplication(req, res) {
             return res.status(400).json({ error: "job_id, company_id, and candidate_id are required" });
         }
 
+        // Validate user role is candidate
+        const [userRoleRows] = await db.query(
+            "SELECT u.role FROM candidates c JOIN users u ON c.user_id = u.user_id WHERE c.candidate_id = ?",
+            [candidate_id]
+        );
+        if (userRoleRows.length > 0 && userRoleRows[0].role !== 'candidate') {
+            return res.status(400).json({ error: "Only candidate accounts can apply to job postings" });
+        }
+
         const [result] = await db.query(
             "INSERT INTO applications (job_id, company_id, candidate_id, resume_text, cover_letter) VALUES (?, ?, ?, ?, ?)",
             [job_id, company_id, candidate_id, resume_text || null, cover_letter || null]

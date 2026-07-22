@@ -2,7 +2,13 @@ const db = require("../db");
 
 async function getAllEmployers(req, res) {
     try {
-        const [rows] = await db.query("SELECT employer_id, user_id, company_id, email, name FROM employers");
+        const [rows] = await db.query(
+            `SELECT e.employer_id, e.user_id, e.company_id, e.email, e.name, c.company_name
+             FROM employers e
+             JOIN companies c ON e.company_id = c.company_id
+             JOIN users u ON e.user_id = u.user_id
+             WHERE LOWER(u.role) = 'employer'`
+        );
         res.json(rows);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -38,6 +44,25 @@ async function getEmployerByUserId(req, res) {
         );
 
         if (rows.length === 0) {
+            const [uRows] = await db.query("SELECT user_id, name, email, role FROM users WHERE user_id = ?", [req.params.user_id]);
+            if (uRows.length > 0 && uRows[0].role === 'employer') {
+                const user = uRows[0];
+                const companyName = `${user.name}'s Company`;
+                const [compRes] = await db.query("INSERT INTO companies (company_name) VALUES (?)", [companyName]);
+                await db.query("INSERT INTO employers (user_id, company_id, email, name) VALUES (?, ?, ?, ?)", [user.user_id, compRes.insertId, user.email, user.name]);
+
+                const [createdRows] = await db.query(
+                    `SELECT e.employer_id, e.user_id, e.company_id, e.email, e.name,
+                            c.company_name, c.industry, c.headquarters_location, c.company_size, c.company_website, c.company_description
+                     FROM employers e
+                     JOIN companies c ON e.company_id = c.company_id
+                     WHERE e.user_id = ?`,
+                    [req.params.user_id]
+                );
+                if (createdRows.length > 0) {
+                    return res.json(createdRows[0]);
+                }
+            }
             return res.status(404).json({ error: "Employer not found" });
         }
 

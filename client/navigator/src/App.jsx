@@ -11,6 +11,7 @@ import ApplyJob from "./pages/ApplyJob";
 import CandidateDashboard from "./pages/CandidateDashboard";
 import EmployerDashboard from "./pages/EmployerDashboard";
 import JobPostingForm from "./pages/JobPostingForm";
+import AdminDashboard from "./pages/AdminDashboard";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 import "./styles/app.css";
 
@@ -19,6 +20,9 @@ function DashboardRouter() {
   if (loading) return null;
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+  if (user.role === "admin") {
+    return <AdminDashboard />;
   }
   if (user.role === "employer") {
     return <EmployerDashboard />;
@@ -42,6 +46,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={<DashboardRouter />} />
           <Route path="/edashboard" element={<DashboardRouter />} />
+          <Route path="/admin" element={<DashboardRouter />} />
           <Route path="/post" element={<JobPostingForm />} />
         </Routes>
       </main>
