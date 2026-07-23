@@ -32,69 +32,63 @@ function ManageAccount() {
   const isEmployer = user?.role === 'employer';
 
   useEffect(() => {
-    if (user) {
-      const nameParts = (user.name || "").trim().split(" ");
-      const firstName = nameParts[0] || "";
-      const lastName = nameParts.slice(1).join(" ") || "";
-      setFormData(prev => ({
-        ...prev,
-        firstName,
-        lastName,
-        email: user.email || "",
-        phone: user.phone || "",
-        location: user.location || ""
-      }));
+    if (!user || !user.id) return;
 
-      if (user.id) {
-        api.get(`/api/users/${user.id}`)
-          .then(uData => {
-            if (uData) {
-              const uNameParts = (uData.name || "").trim().split(" ");
-              const uFirstName = uNameParts[0] || "";
-              const uLastName = uNameParts.slice(1).join(" ") || "";
-              setFormData(prev => ({
-                ...prev,
-                firstName: uFirstName,
-                lastName: uLastName,
-                email: uData.email || "",
-                phone: uData.phone || "",
-                location: uData.location || ""
-              }));
+    let isMounted = true;
 
-              const currentToken = localStorage.getItem("token");
-              if (currentToken) {
-                login({
-                  ...user,
-                  name: uData.name || user.name,
-                  email: uData.email || user.email,
-                  phone: uData.phone || "",
-                  location: uData.location || ""
-                }, currentToken);
-              }
-            }
-          })
-          .catch(() => {});
-      }
+    const nameParts = (user.name || "").trim().split(" ");
+    const initialFirstName = nameParts[0] || "";
+    const initialLastName = nameParts.slice(1).join(" ") || "";
 
-      if (user.role === 'employer' && user.id) {
-        api.get(`/api/employers/user/${user.id}`)
-          .then(emp => {
-            if (emp) {
-              setFormData(prev => ({
-                ...prev,
-                companyName: emp.company_name || "",
-                companySize: emp.company_size || "11-50 Employees",
-                companyWebsite: emp.company_website || "",
-                industry: emp.industry || "",
-                companyDescription: emp.company_description || "",
-                headquartersLocation: emp.headquarters_location || ""
-              }));
-            }
-          })
-          .catch(() => {});
-      }
+    setFormData(prev => ({
+      ...prev,
+      firstName: initialFirstName,
+      lastName: initialLastName,
+      email: user.email || "",
+      phone: user.phone || "",
+      location: user.location || ""
+    }));
+
+    api.get(`/api/users/${user.id}`)
+      .then(uData => {
+        if (uData && isMounted) {
+          const uNameParts = (uData.name || "").trim().split(" ");
+          const uFirstName = uNameParts[0] || "";
+          const uLastName = uNameParts.slice(1).join(" ") || "";
+          setFormData(prev => ({
+            ...prev,
+            firstName: uFirstName,
+            lastName: uLastName,
+            email: uData.email || "",
+            phone: uData.phone || "",
+            location: uData.location || ""
+          }));
+        }
+      })
+      .catch(() => {});
+
+    if (user.role === 'employer') {
+      api.get(`/api/employers/user/${user.id}`)
+        .then(emp => {
+          if (emp && isMounted) {
+            setFormData(prev => ({
+              ...prev,
+              companyName: emp.company_name || "",
+              companySize: emp.company_size || "11-50 Employees",
+              companyWebsite: emp.company_website || "",
+              industry: emp.industry || "",
+              companyDescription: emp.company_description || "",
+              headquartersLocation: emp.headquarters_location || ""
+            }));
+          }
+        })
+        .catch(() => {});
     }
-  }, [user]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.id]);
 
   function handleChange(e) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
