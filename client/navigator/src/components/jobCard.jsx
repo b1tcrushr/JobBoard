@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
-import "../styles/Components.css";
+import "../styles/components.css";
 
 function JobCard({title, company, job_id}) {
   const navigate = useNavigate();

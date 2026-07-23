@@ -21,7 +21,7 @@ const JobPostingForm = () => {
     jobType: 'Full-Time',
     roleType: 'Full-Time',
     payGrade: 'Grade 1',
-    experienceLevel: '1',
+    experienceLevel: 'Entry Level',
     description: '',
     requirements: '',
     responsibilities: '',
@@ -73,7 +73,7 @@ const JobPostingForm = () => {
       job_type: formData.jobType,
       job_description: formData.description,
       job_status: 'open',
-      experience_level: formData.experienceLevel ? parseInt(formData.experienceLevel) : null,
+      experience_level: formData.experienceLevel || null,
       role_type: formData.roleType,
       pay_grade: formData.payGrade,
       requirements: formData.requirements || null,
@@ -164,8 +164,17 @@ const JobPostingForm = () => {
               />
             </div>
 
-            {/* Work Type & Role Type & Pay Grade */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+            {/* Experience Level, Work Type, Role Type, Pay Grade */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '1rem' }}>
+              <div>
+                <label style={styles.label}>Experience Level</label>
+                <select name="experienceLevel" value={formData.experienceLevel} onChange={handleChange} className="form-select" style={styles.fullWidthInput}>
+                  <option value="Entry Level">Entry Level</option>
+                  <option value="3+ Years">3+ Years</option>
+                  <option value="5+ Years">5+ Years</option>
+                </select>
+              </div>
+
               <div>
                 <label style={styles.label}>Work Type</label>
                 <select name="workType" value={formData.workType} onChange={handleChange} className="form-select" style={styles.fullWidthInput}>

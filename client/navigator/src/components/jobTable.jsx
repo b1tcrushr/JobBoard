@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import "../styles/JobTable.css";
+import "../styles/jobTable.css";
 
 function JobTable({
   jobs,
@@ -31,7 +31,7 @@ function JobTable({
                 <td>{job.company_name}</td>
                 {!condense && <td>{job.job_location}</td>}
                 {!condense && <td>{job.job_type}</td>}
-                {!condense && <td>{job.job_status}</td>}
+                {!condense && <td>{job.pay_grade || 'N/A'}</td>}
             </tr>
           ))}
         </tbody>
