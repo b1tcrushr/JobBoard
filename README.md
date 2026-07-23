@@ -56,61 +56,53 @@ A centralized web portal connecting university students + recent graduates with 
 
 ## Tech Stack
 
+> _To be updated after Milestone 1._
+
 | Layer | Technology |
 |---|---|
-| Frontend | React + Vite |
-| Backend | Node.js / Express |
+| Frontend | React |
+| Backend | Node / express server |
 | Database | MySQL |
 | Authentication | JWT / bcrypt |
+| Hosting | TBD |
 
 ---
 
 ## Getting Started
 
+> _To be updated after Milestone 1._
+
 ### Prerequisites
-- Node.js v18+
-- MySQL 8+
+
+```
+# required tools, runtimes + versions here
+```
 
 ### Installation
 
 ```bash
-# Clone the repository
+# clone repository
 git clone https://github.com/b1tcrushr/JobBoard
-cd JobBoard
+cd YOUR_REPO
 
-# Install server dependencies
-cd server
-npm install
+# install dependencies
+# cd client
+# npm i (install node dependencies)
+# npm run dev (start the client)
 
-# Install client dependencies
-cd ../client/navigator
-npm install
+# config environment variables
+cp .env.example .env
+# edit .env with local settings
+
+# run dev server
+# ...
 ```
 
-### Configuration
-
-1. In `server/`, copy the example env file and fill in your database credentials:
-```bash
-cp env.example .env
-```
-Edit `.env` with your MySQL host, user, password, and database name.
-
-2. Create the database by running the schema:
-```bash
-mysql -u root -p < server/database/schemas.sql
-```
-
-### Running the App
+### Running Tests
 
 ```bash
-# Start the backend (from /server)
-node server.js
-
-# Start the frontend (from /client/navigator)
-npm run dev
+# test commands here
 ```
-
-The client runs at `http://localhost:5173` and the API at `http://localhost:3000`.
 
 ---
 
@@ -129,7 +121,7 @@ The client runs at `http://localhost:5173` and the API at `http://localhost:3000
 
 ## Data Model
 
-Five core entities:
+Five core entities (subject to change):
 
 - **Candidate** — job seekers w/ profile and resume info
 - **Employer** — recruiters tied to a company
@@ -157,15 +149,17 @@ Five core entities:
 
 ## Milestones
 
-| Milestone | Description | Status |
-|---|---|---|
-| M1 — Planning & Design | Project planning, wireframes, and database design | Complete |
-| M2 — Front-End Implementation & Database Design | React pages, routing, component styling | Complete |
-| M3 — Full-Stack Integration, Testing Report, Final Demo & Presentation | Backend API, authentication, database integration | Complete |
+| Milestone | Description |
+|---|---|
+| M1 — Planning & Design | In Progress |
+| M2 — Front-End Implementation & Database Design | Not Started |
+| M3 — Full-Stack Integration, Testing Report, Final Demo & Presentation| Not Started |
 
 ---
 
 ## Team
+
+> _To be confirmed after Milestone 1._
 
 | Name | Role |
 |---|---|
@@ -181,4 +175,4 @@ Five core entities:
 
 ---
 
-> Last updated: July 22, 2026
+> Last updated: June 2026

@@ -123,6 +123,29 @@ function ApplyJob() {
     );
   }
 
+  if (user.role !== 'candidate') {
+    return (
+      <div className="apply-container" style={{ textAlign: "center", padding: "3rem 1rem" }}>
+        <div className="apply-form-card" style={{ maxWidth: "500px", margin: "2rem auto", padding: "2rem" }}>
+          <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🚫</div>
+          <h2 style={{ fontSize: "1.5rem", color: "#1e293b", marginBottom: "0.5rem" }}>
+            {user.role === 'admin' ? "Admin Account" : "Employer Account"}
+          </h2>
+          <p style={{ fontSize: "1rem", color: "#64748b", marginBottom: "1.5rem" }}>
+            {user.role === 'admin'
+              ? "Admin accounts cannot apply to job postings."
+              : "Employer accounts cannot apply to job postings."}
+          </p>
+          <Link to="/">
+            <button className="common-button" style={{ padding: "0.75rem 2rem", fontSize: "1rem" }}>
+              Back to Home
+            </button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   if (fetchingJob) {
     return (
       <div className="apply-container" style={{ textAlign: "center", padding: "3rem 1rem" }}>

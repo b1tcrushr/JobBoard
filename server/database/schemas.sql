@@ -58,7 +58,7 @@ CREATE TABLE job_postings (
     job_type VARCHAR(20) NOT NULL,
     job_description VARCHAR(4000) NOT NULL,
     job_status VARCHAR(20) NOT NULL,
-    experience_level INT,
+    experience_level VARCHAR(255),
     role_type ENUM('Full-Time', 'Part-Time', 'Co-op'),
     pay_grade ENUM('Grade 1', 'Grade 2', 'Grade 3', 'Grade 4'),
     requirements TEXT,

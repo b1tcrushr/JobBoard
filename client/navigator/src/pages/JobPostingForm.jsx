@@ -19,7 +19,6 @@ const JobPostingForm = () => {
     location: '',
     workType: 'Remote',
     jobType: 'Full-Time',
-    roleType: 'Full-Time',
     payGrade: 'Grade 1',
     experienceLevel: 'Entry Level',
     description: '',
@@ -74,7 +73,6 @@ const JobPostingForm = () => {
       job_description: formData.description,
       job_status: 'open',
       experience_level: formData.experienceLevel || null,
-      role_type: formData.roleType,
       pay_grade: formData.payGrade,
       requirements: formData.requirements || null,
       responsibilities: formData.responsibilities || null,
@@ -164,7 +162,7 @@ const JobPostingForm = () => {
               />
             </div>
 
-            {/* Experience Level, Work Type, Role Type, Pay Grade */}
+            {/* Experience Level, Work Type, Job Type, Pay Grade */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '1rem' }}>
               <div>
                 <label style={styles.label}>Experience Level</label>
@@ -185,11 +183,12 @@ const JobPostingForm = () => {
               </div>
 
               <div>
-                <label style={styles.label}>Role Type</label>
-                <select name="roleType" value={formData.roleType} onChange={handleChange} className="form-select" style={styles.fullWidthInput}>
+                <label style={styles.label}>Job Type</label>
+                <select name="jobType" value={formData.jobType} onChange={handleChange} className="form-select" style={styles.fullWidthInput}>
                   <option value="Full-Time">Full-Time</option>
                   <option value="Part-Time">Part-Time</option>
                   <option value="Co-op">Co-op</option>
+                  <option value="Contract">Contract</option>
                 </select>
               </div>
 

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { api } from "../api/apiClient.js";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -20,6 +20,15 @@ export default function Register() {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [hasAdmin, setHasAdmin] = useState(true);
+
+  useEffect(() => {
+    api.get("/api/users/admin-exists")
+      .then(res => {
+        setHasAdmin(!!res.adminExists);
+      })
+      .catch(() => setHasAdmin(true));
+  }, []);
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -92,6 +101,7 @@ export default function Register() {
             <select name="role" value={form.role} onChange={handleChange} required>
               <option value="candidate">Candidate</option>
               <option value="employer">Employer</option>
+              {!hasAdmin && <option value="admin">Admin</option>}
             </select>
           </label>
 

@@ -3,6 +3,15 @@ const db = require("../db");
 const ROLE_TYPES = ["Full-Time", "Part-Time", "Co-op"];
 const PAY_GRADES = ["Grade 1", "Grade 2", "Grade 3", "Grade 4"];
 
+async function ensureJobColumns() {
+    try {
+        await db.query("ALTER TABLE job_postings MODIFY COLUMN experience_level VARCHAR(255)");
+    } catch (e) {
+        // Table or column alter already handled
+    }
+}
+ensureJobColumns();
+
 async function getAllJobs(req, res) {
     try {
         const [rows] = await db.query(
@@ -173,4 +182,32 @@ async function getJobStats(req, res) {
     }
 }
 
-module.exports = { getAllJobs, getJobByEmployer, getJobById, createJob, updateJobById, closeJobById, reopenJobById, getJobStats };
+async function getAllJobsAdmin(req, res) {
+    try {
+        const [rows] = await db.query(
+            `SELECT j.job_id, j.employer_id, j.company_id, j.job_title, j.job_location, j.work_type, j.job_type, j.job_description, j.job_status, j.experience_level, j.role_type, j.pay_grade, j.requirements, j.responsibilities, j.benefits, c.company_name
+             FROM job_postings j
+             JOIN companies c ON j.company_id = c.company_id
+             ORDER BY j.job_id DESC`
+        );
+        res.json(rows);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}
+
+async function deleteJobPermanently(req, res) {
+    const { job_id } = req.params;
+    try {
+        await db.query("DELETE FROM applications WHERE job_id = ?", [job_id]);
+        const [result] = await db.query("DELETE FROM job_postings WHERE job_id = ?", [job_id]);
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: "Job not found" });
+        }
+        res.json({ message: "Job deleted permanently", job_id });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}
+
+module.exports = { getAllJobs, getJobByEmployer, getJobById, createJob, updateJobById, closeJobById, reopenJobById, getJobStats, getAllJobsAdmin, deleteJobPermanently };

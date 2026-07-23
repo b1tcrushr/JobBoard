@@ -59,6 +59,15 @@ async function createUser(req, res) {
     }
 
     try {
+        if (role === "admin") {
+            const [adminRows] = await db.query("SELECT COUNT(*) AS count FROM users WHERE LOWER(role) = 'admin'");
+            const adminCount = adminRows[0].count;
+            if (adminCount > 0 && req.user?.role !== "admin") {
+                return res.status(400).json({
+                    error: "An admin account already exists. New accounts can only be created as employer or candidate."
+                });
+            }
+        }
         //check if email in use
         const [existing] = await db.query("SELECT user_id FROM users WHERE email = ?", [email]);
         if (existing.length > 0) {
@@ -168,7 +177,7 @@ async function loginUser(req, res) {
 
 async function updateUser(req, res) {
     const { user_id } = req.params;
-    const { name, email, phone, location, currentPassword, newPassword } = req.body;
+    const { name, email, role, phone, location, currentPassword, newPassword, company_name, industry, headquarters_location, company_size, company_website, company_description } = req.body;
 
     try {
         await ensureUserColumns();
@@ -185,13 +194,16 @@ async function updateUser(req, res) {
 
         // Validate and update password
         if (newPassword) {
-            if (!currentPassword) {
+            const isAdmin = req.user && req.user.role === 'admin';
+            if (!isAdmin && !currentPassword) {
                 return res.status(400).json({ error: "Current password is required to change password" });
             }
 
-            const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
-            if (!isMatch) {
-                return res.status(400).json({ error: "Current password is incorrect" });
+            if (currentPassword) {
+                const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
+                if (!isMatch) {
+                    return res.status(400).json({ error: "Current password is incorrect" });
+                }
             }
 
             if (newPassword.length < 8) {
@@ -207,6 +219,7 @@ async function updateUser(req, res) {
         const updatedEmail = email ? email.trim() : user.email;
         const updatedPhone = phone !== undefined ? phone.trim() : (user.phone || "");
         const updatedLocation = location !== undefined ? location.trim() : (user.location || "");
+        const updatedRole = role && ['candidate', 'employer', 'admin'].includes(role.toLowerCase()) ? role.toLowerCase() : user.role;
 
         if (email && email.trim() !== user.email) {
             const [existing] = await db.query(
@@ -219,11 +232,63 @@ async function updateUser(req, res) {
         }
 
         await db.query(
-            "UPDATE users SET name = ?, email = ?, phone = ?, location = ? WHERE user_id = ?",
-            [updatedName, updatedEmail, updatedPhone, updatedLocation, user_id]
+            "UPDATE users SET name = ?, email = ?, role = ?, phone = ?, location = ? WHERE user_id = ?",
+            [updatedName, updatedEmail, updatedRole, updatedPhone, updatedLocation, user_id]
         );
-        await db.query("UPDATE candidates SET name = ?, email = ? WHERE user_id = ?", [updatedName, updatedEmail, user_id]);
-        await db.query("UPDATE employers SET name = ?, email = ? WHERE user_id = ?", [updatedName, updatedEmail, user_id]);
+
+        // Sync Candidates profile table
+        const [candRows] = await db.query("SELECT candidate_id FROM candidates WHERE user_id = ?", [user_id]);
+        if (candRows.length > 0) {
+            await db.query("UPDATE candidates SET name = ?, email = ? WHERE user_id = ?", [updatedName, updatedEmail, user_id]);
+        } else if (updatedRole === 'candidate' || updatedRole === 'admin') {
+            await db.query("INSERT INTO candidates (user_id, email, name) VALUES (?, ?, ?)", [user_id, updatedEmail, updatedName]);
+        }
+
+        // Sync Employers profile table & Company details
+        const [empRows] = await db.query("SELECT employer_id, company_id FROM employers WHERE user_id = ?", [user_id]);
+        if (empRows.length > 0) {
+            const companyId = empRows[0].company_id;
+            if (company_name || industry || company_size || company_website || company_description || headquarters_location) {
+                await db.query(
+                    `UPDATE companies 
+                     SET company_name = COALESCE(?, company_name),
+                         industry = COALESCE(?, industry),
+                         company_size = COALESCE(?, company_size),
+                         company_website = COALESCE(?, company_website),
+                         company_description = COALESCE(?, company_description),
+                         headquarters_location = COALESCE(?, headquarters_location)
+                     WHERE company_id = ?`,
+                    [
+                        company_name ? company_name.trim() : null,
+                        industry ? industry.trim() : null,
+                        company_size ? company_size.trim() : null,
+                        company_website ? company_website.trim() : null,
+                        company_description ? company_description.trim() : null,
+                        headquarters_location ? headquarters_location.trim() : null,
+                        companyId
+                    ]
+                );
+            }
+
+            if (updatedRole === 'candidate') {
+                const empId = empRows[0].employer_id;
+                const [jobs] = await db.query("SELECT job_id FROM job_postings WHERE employer_id = ?", [empId]);
+                if (jobs.length === 0) {
+                    await db.query("DELETE FROM employers WHERE user_id = ?", [user_id]);
+                } else {
+                    await db.query("UPDATE employers SET name = ?, email = ? WHERE user_id = ?", [updatedName, updatedEmail, user_id]);
+                }
+            } else {
+                await db.query("UPDATE employers SET name = ?, email = ? WHERE user_id = ?", [updatedName, updatedEmail, user_id]);
+            }
+        } else if (updatedRole === 'employer') {
+            const companyName = company_name ? company_name.trim() : `${updatedName}'s Company`;
+            const [compRes] = await db.query(
+                "INSERT INTO companies (company_name, industry, headquarters_location, company_size, company_website, company_description) VALUES (?, ?, ?, ?, ?, ?)",
+                [companyName, industry || null, headquarters_location || null, company_size || null, company_website || null, company_description || null]
+            );
+            await db.query("INSERT INTO employers (user_id, company_id, email, name) VALUES (?, ?, ?, ?)", [user_id, compRes.insertId, updatedEmail, updatedName]);
+        }
 
         res.json({
             message: "Account updated successfully",
@@ -231,7 +296,7 @@ async function updateUser(req, res) {
                 id: user.user_id,
                 name: updatedName,
                 email: updatedEmail,
-                role: user.role,
+                role: updatedRole,
                 phone: updatedPhone,
                 location: updatedLocation
             }
@@ -241,4 +306,32 @@ async function updateUser(req, res) {
     }
 }
 
-module.exports = { getAllUsers, getUsersById, createUser, loginUser, updateUser };
+async function deleteUser(req, res) {
+    const { user_id } = req.params;
+    try {
+        const [existing] = await db.query("SELECT user_id FROM users WHERE user_id = ?", [user_id]);
+        if (existing.length === 0) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        await db.query("DELETE FROM candidates WHERE user_id = ?", [user_id]);
+        await db.query("DELETE FROM employers WHERE user_id = ?", [user_id]);
+        await db.query("DELETE FROM users WHERE user_id = ?", [user_id]);
+
+        res.json({ message: "User deleted successfully", user_id });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}
+
+async function checkAdminExists(req, res) {
+    try {
+        const [rows] = await db.query("SELECT COUNT(*) AS count FROM users WHERE LOWER(role) = 'admin'");
+        const adminCount = rows[0].count;
+        res.json({ adminExists: adminCount > 0, count: adminCount });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}
+
+module.exports = { getAllUsers, getUsersById, createUser, loginUser, updateUser, deleteUser, checkAdminExists };

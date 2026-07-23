@@ -5,7 +5,7 @@ import "../styles/components.css";
 function JobCard({title, company, job_id}) {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const isEmployer = user?.role === 'employer';
+  const isNonCandidate = user?.role === 'employer' || user?.role === 'admin';
 
   return (
     <div className="job-card-container">
@@ -15,7 +15,7 @@ function JobCard({title, company, job_id}) {
         </div>
         <div>
             <button className="job-card-apply" onClick={() => navigate(`/jobs/${job_id}`)}>
-              {isEmployer ? "View" : "Apply"}
+              {isNonCandidate ? "View" : "Apply"}
             </button>
         </div>
          
