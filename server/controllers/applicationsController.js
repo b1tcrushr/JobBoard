@@ -52,10 +52,11 @@ async function createApplication(req, res) {
             `UPDATE candidates 
              SET 
                applications_sent = (SELECT COUNT(*) FROM applications WHERE candidate_id = ?),
-               interviews_scheduled = (SELECT COUNT(*) FROM applications WHERE candidate_id = ? AND LOWER(status) IN ('interview', 'accepted')),
+               interviews_scheduled = (SELECT COUNT(*) FROM applications WHERE candidate_id = ? AND LOWER(status) = 'interview'),
+               jobs_accepted = (SELECT COUNT(*) FROM applications WHERE candidate_id = ? AND LOWER(status) = 'accepted'),
                not_selected = (SELECT COUNT(*) FROM applications WHERE candidate_id = ? AND LOWER(status) = 'rejected')
              WHERE candidate_id = ?`,
-            [candidate_id, candidate_id, candidate_id, candidate_id]
+            [candidate_id, candidate_id, candidate_id, candidate_id, candidate_id]
         );
 
         res.status(201).json({
@@ -131,10 +132,11 @@ async function updateApplication(req, res) {
                 `UPDATE candidates 
                  SET 
                    applications_sent = (SELECT COUNT(*) FROM applications WHERE candidate_id = ?),
-                   interviews_scheduled = (SELECT COUNT(*) FROM applications WHERE candidate_id = ? AND LOWER(status) IN ('interview', 'accepted')),
+                   interviews_scheduled = (SELECT COUNT(*) FROM applications WHERE candidate_id = ? AND LOWER(status) = 'interview'),
+                   jobs_accepted = (SELECT COUNT(*) FROM applications WHERE candidate_id = ? AND LOWER(status) = 'accepted'),
                    not_selected = (SELECT COUNT(*) FROM applications WHERE candidate_id = ? AND LOWER(status) = 'rejected')
                  WHERE candidate_id = ?`,
-                [candidateId, candidateId, candidateId, candidateId]
+                [candidateId, candidateId, candidateId, candidateId, candidateId]
             );
         }
 

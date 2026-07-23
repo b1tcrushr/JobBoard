@@ -43,6 +43,11 @@
 }
 
 .status-interview {
+  background-color: #eff6ff;
+  color: #2563eb; /* Blue */
+}
+
+.status-accepted {
   background-color: #f0fdf4;
   color: #16a34a; /* Green */
 }

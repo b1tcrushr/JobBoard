@@ -160,17 +160,17 @@ const EmployerDashboard = () => {
   const getStatusClass = (status) => {
     switch (status?.toLowerCase()) {
       case 'accepted':
-        return 'status-interview'; // Green badge
+        return 'status-accepted';
       case 'interview':
-        return 'status-pending'; // Blue/purple badge
+        return 'status-interview';
       case 'pending':
       case 'applied':
       case 'under review':
       case 'open':
-        return 'status-pending'; // Yellow badge
+        return 'status-pending';
       case 'closed':
       case 'rejected':
-        return 'status-rejected'; // Red badge
+        return 'status-rejected';
       default:
         return '';
     }

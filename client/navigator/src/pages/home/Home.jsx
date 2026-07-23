@@ -129,12 +129,21 @@ function Home() {
                             height={bubbleMinHeight}/>
 
                         <DisplayBubble
-                            borderColour="#ccefd8"
-                            bgColour="#edf9f1"
-                            textColour="#16a34a"
+                            borderColour="#fef3c7"
+                            bgColour="#fffbeb"
+                            textColour="#d97706"
                             icon="📅"
                             stat={candidateStats?.interviews_scheduled ?? 0}
                             title="Interviews Scheduled"
+                            height={bubbleMinHeight}/>
+
+                        <DisplayBubble
+                            borderColour="#ccefd8"
+                            bgColour="#edf9f1"
+                            textColour="#16a34a"
+                            icon="🎉"
+                            stat={candidateStats?.jobs_accepted ?? 0}
+                            title="Jobs Accepted"
                             height={bubbleMinHeight}/>
 
                         <DisplayBubble

@@ -58,6 +58,8 @@ const CandidateDashboard = () => {
         return 'status-pending';
       case 'interview':
         return 'status-interview';
+      case 'accepted':
+        return 'status-accepted';
       case 'rejected':
         return 'status-rejected';
       default:
@@ -74,6 +76,7 @@ const CandidateDashboard = () => {
   const stats = {
     pending: applications.filter(a => ['applied', 'pending', 'under review'].includes(a.status?.toLowerCase())).length,
     interviews: applications.filter(a => a.status?.toLowerCase() === 'interview').length,
+    accepted: applications.filter(a => a.status?.toLowerCase() === 'accepted').length,
     rejected: applications.filter(a => a.status?.toLowerCase() === 'rejected').length
   };
 
@@ -139,10 +142,18 @@ const CandidateDashboard = () => {
             </div>
 
             {/* Interviews Card */}
+            <div className="stat-card" style={{ backgroundColor: '#eff6ff', border: '1px solid #cfe2ff' }}>
+              <div>
+                <h2 className="stat-value" style={{ color: '#2563eb' }}>{stats.interviews}</h2>
+                <p className="stat-label" style={{ color: '#1d4ed8' }}>Interviews Scheduled</p>
+              </div>
+            </div>
+
+            {/* Accepted Card */}
             <div className="stat-card green">
               <div>
-                <h2 className="stat-value">{stats.interviews}</h2>
-                <p className="stat-label">Interviews Scheduled</p>
+                <h2 className="stat-value">{stats.accepted}</h2>
+                <p className="stat-label">Jobs Accepted</p>
               </div>
             </div>
 

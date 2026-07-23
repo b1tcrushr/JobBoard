@@ -43,6 +43,7 @@ CREATE TABLE candidates (
     name VARCHAR(255) NOT NULL,
     applications_sent INT NOT NULL DEFAULT 0,
     interviews_scheduled INT NOT NULL DEFAULT 0,
+    jobs_accepted INT NOT NULL DEFAULT 0,
     not_selected INT NOT NULL DEFAULT 0,
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );

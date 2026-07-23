@@ -1,11 +1,22 @@
 const db = require("../db");
 
+async function ensureCandidateColumns() {
+    try {
+        await db.query("ALTER TABLE candidates ADD COLUMN jobs_accepted INT NOT NULL DEFAULT 0");
+    } catch (e) {
+        // Column already exists or alter handled
+    }
+}
+ensureCandidateColumns();
+
 async function getAllCandidates(req, res) {
     try {
+        await ensureCandidateColumns();
         const [rows] = await db.query(
             `SELECT c.candidate_id, c.user_id, c.email, c.name,
                     COUNT(a.app_id) AS applications_sent,
-                    SUM(CASE WHEN LOWER(a.status) IN ('interview', 'accepted') THEN 1 ELSE 0 END) AS interviews_scheduled,
+                    SUM(CASE WHEN LOWER(a.status) = 'interview' THEN 1 ELSE 0 END) AS interviews_scheduled,
+                    SUM(CASE WHEN LOWER(a.status) = 'accepted' THEN 1 ELSE 0 END) AS jobs_accepted,
                     SUM(CASE WHEN LOWER(a.status) = 'rejected' THEN 1 ELSE 0 END) AS not_selected
              FROM candidates c
              JOIN users u ON c.user_id = u.user_id
@@ -21,10 +32,12 @@ async function getAllCandidates(req, res) {
 
 async function getCandidateById(req, res) {
     try {
+        await ensureCandidateColumns();
         const [rows] = await db.query(
             `SELECT c.candidate_id, c.user_id, c.email, c.name,
                     COUNT(a.app_id) AS applications_sent,
-                    SUM(CASE WHEN LOWER(a.status) IN ('interview', 'accepted') THEN 1 ELSE 0 END) AS interviews_scheduled,
+                    SUM(CASE WHEN LOWER(a.status) = 'interview' THEN 1 ELSE 0 END) AS interviews_scheduled,
+                    SUM(CASE WHEN LOWER(a.status) = 'accepted' THEN 1 ELSE 0 END) AS jobs_accepted,
                     SUM(CASE WHEN LOWER(a.status) = 'rejected' THEN 1 ELSE 0 END) AS not_selected
              FROM candidates c
              LEFT JOIN applications a ON c.candidate_id = a.candidate_id
@@ -45,6 +58,7 @@ async function getCandidateById(req, res) {
 
 async function getCandidateByUserId(req, res) {
     try {
+        await ensureCandidateColumns();
         const [rows] = await db.query(
             "SELECT candidate_id, user_id, email, name FROM candidates WHERE user_id = ?",
             [req.params.user_id]
@@ -60,6 +74,7 @@ async function getCandidateByUserId(req, res) {
                     const candidate = createdRows[0];
                     candidate.applications_sent = 0;
                     candidate.interviews_scheduled = 0;
+                    candidate.jobs_accepted = 0;
                     candidate.not_selected = 0;
                     return res.json(candidate);
                 }
@@ -72,7 +87,8 @@ async function getCandidateByUserId(req, res) {
         const [stats] = await db.query(
             `SELECT 
                 COUNT(*) AS applications_sent,
-                SUM(CASE WHEN LOWER(status) IN ('interview', 'accepted') THEN 1 ELSE 0 END) AS interviews_scheduled,
+                SUM(CASE WHEN LOWER(status) = 'interview' THEN 1 ELSE 0 END) AS interviews_scheduled,
+                SUM(CASE WHEN LOWER(status) = 'accepted' THEN 1 ELSE 0 END) AS jobs_accepted,
                 SUM(CASE WHEN LOWER(status) = 'rejected' THEN 1 ELSE 0 END) AS not_selected
              FROM applications 
              WHERE candidate_id = ?`,
@@ -82,6 +98,7 @@ async function getCandidateByUserId(req, res) {
         const realStats = stats[0] || {};
         candidate.applications_sent = Number(realStats.applications_sent || 0);
         candidate.interviews_scheduled = Number(realStats.interviews_scheduled || 0);
+        candidate.jobs_accepted = Number(realStats.jobs_accepted || 0);
         candidate.not_selected = Number(realStats.not_selected || 0);
 
         res.json(candidate);
