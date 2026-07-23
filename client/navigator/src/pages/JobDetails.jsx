@@ -38,8 +38,8 @@ const JobDetails = () => {
   }, [id, user]);
 
   const handleSaveClick = () => {
-    if (user?.role === 'employer') {
-      alert("Employer accounts cannot save or favourite job listings.");
+    if (user?.role === 'employer' || user?.role === 'admin') {
+      alert("Employer and Admin accounts cannot save or favourite job listings.");
       return;
     }
     if (!user) {
@@ -60,8 +60,8 @@ const JobDetails = () => {
       alert("This job posting is closed and no longer accepts applications.");
       return;
     }
-    if (user?.role === 'employer') {
-      alert("Employer accounts cannot apply to job postings.");
+    if (user?.role === 'employer' || user?.role === 'admin') {
+      alert("Employer and Admin accounts cannot apply to job postings.");
       return;
     }
     if (!user) {
@@ -87,7 +87,7 @@ const JobDetails = () => {
     );
   }
 
-  const isEmployer = user?.role === 'employer';
+  const isNonCandidate = user?.role === 'employer' || user?.role === 'admin';
   const isClosed = jobData?.job_status?.toLowerCase() === 'closed';
 
   return (
@@ -131,9 +131,9 @@ const JobDetails = () => {
             <button className="secondary-btn" disabled style={{ backgroundColor: '#fee2e2', color: '#dc2626', borderColor: '#fca5a5', cursor: 'default', fontWeight: '600' }}>
               Posting Closed
             </button>
-          ) : isEmployer ? (
+          ) : isNonCandidate ? (
             <div style={{ fontSize: '0.9rem', color: '#64748b', fontStyle: 'italic', padding: '0.5rem 1rem', backgroundColor: '#f1f5f9', borderRadius: '0.375rem', border: '1px solid #cbd5e1' }}>
-              Employer View (Applying & favouriting disabled)
+              {user?.role === 'admin' ? "Admin View (Applying & favouriting disabled)" : "Employer View (Applying & favouriting disabled)"}
             </div>
           ) : (
             <>
