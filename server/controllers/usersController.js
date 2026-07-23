@@ -294,6 +294,7 @@ async function updateUser(req, res) {
             message: "Account updated successfully",
             user: {
                 id: user.user_id,
+                user_id: user.user_id,
                 name: updatedName,
                 email: updatedEmail,
                 role: updatedRole,

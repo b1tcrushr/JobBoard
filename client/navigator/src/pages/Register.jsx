@@ -13,6 +13,7 @@ export default function Register() {
     name: "",
     email: "",
     password: "",
+    confirmPassword: "",
     role: "candidate",
     company_name: "",
     industry: "",
@@ -37,9 +38,16 @@ export default function Register() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
+
+    if (form.password !== form.confirmPassword) {
+      setError("Passwords do not match. Please ensure both password fields match.");
+      return;
+    }
+
     setLoading(true);
     try {
-      const data = await api.post("/api/users/register", form);
+      const { confirmPassword, ...registerPayload } = form;
+      const data = await api.post("/api/users/register", registerPayload);
       login({ id: data.id, name: data.name, email: data.email, role: data.role }, data.token);
       navigate("/");
     } catch (err) {
@@ -91,6 +99,19 @@ export default function Register() {
               value={form.password}
               onChange={handleChange}
               placeholder="Min. 8 characters"
+              minLength={8}
+              required
+            />
+          </label>
+
+          <label>
+            Confirm Password
+            <input
+              type="password"
+              name="confirmPassword"
+              value={form.confirmPassword}
+              onChange={handleChange}
+              placeholder="Re-enter password"
               minLength={8}
               required
             />

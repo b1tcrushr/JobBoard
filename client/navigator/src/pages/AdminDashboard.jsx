@@ -5,7 +5,7 @@ import { api } from "../api/apiClient.js";
 import "../styles/adminDashboard.css";
 
 export default function AdminDashboard() {
-  const { user } = useAuth();
+  const { user, login } = useAuth();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState("postings");
@@ -361,9 +361,22 @@ export default function AdminDashboard() {
 
       const updatedUser = res.user || { ...editingUser, ...userForm };
       
-      setUsers(prev => prev.map(u => u.user_id === editingUser.user_id ? { ...u, ...updatedUser } : u));
+      if (user && (user.id === editingUser.user_id || user.user_id === editingUser.user_id) && updatedUser) {
+        const currentToken = localStorage.getItem("token");
+        if (currentToken) {
+          login({
+            ...user,
+            name: updatedUser.name || user.name,
+            email: updatedUser.email || user.email,
+            phone: updatedUser.phone || user.phone,
+            location: updatedUser.location || user.location
+          }, currentToken);
+        }
+      }
+
       setActionSuccess(`User account "${updatedUser.name}" updated successfully.`);
       setEditingUser(null);
+      loadDashboardData();
       setTimeout(() => setActionSuccess(""), 4000);
     } catch (err) {
       setError(err.message || "Failed to update user account.");
@@ -379,8 +392,8 @@ export default function AdminDashboard() {
 
     try {
       await api.delete(`/api/users/${userId}`);
-      setUsers(prev => prev.filter(u => u.user_id !== userId));
       setActionSuccess(`User "${userName}" was successfully deleted.`);
+      loadDashboardData();
       setTimeout(() => setActionSuccess(""), 4000);
     } catch (err) {
       setError(err.message || "Failed to delete user.");
@@ -843,6 +856,14 @@ export default function AdminDashboard() {
                       )}
 
                       <div className="applicant-actions">
+                        <button
+                          className="admin-action-btn"
+                          style={{ background: "#fef3c7", color: "#b45309", borderColor: "#fde68a" }}
+                          onClick={() => handleUpdateAppStatus(app.app_id, "under review")}
+                          disabled={currentStatus === "under review"}
+                        >
+                          🔍 Mark Under Review
+                        </button>
                         <button
                           className="admin-action-btn btn-interview"
                           onClick={() => handleUpdateAppStatus(app.app_id, "interview")}

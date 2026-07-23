@@ -20,8 +20,9 @@ const Jobs = () => {
   const [keyword, setKeyword] = useState('');
   const [location, setLocation] = useState('');
   const [experience, setExperience] = useState('');
-  const [roleType, setRoleType] = useState('');
+  const [jobType, setJobType] = useState('');
   const [payGrade, setPayGrade] = useState('');
+  const [sortBy, setSortBy] = useState('newest'); // 'newest', 'oldest', 'title'
 
   const [filteredJobs, setFilteredJobs] = useState([]);
 
@@ -30,38 +31,58 @@ const Jobs = () => {
       .then(data => {
         const jobList = Array.isArray(data) ? data : [];
         setJobs(jobList);
-        setFilteredJobs(jobList);
+        applyFiltersAndSort(jobList, keyword, location, experience, jobType, payGrade, sortBy);
       })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
-  },[]);
+  }, []);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    
-    const results = jobs.filter(job => {
-      const matchKeyword = (job.job_title || '').toLowerCase().includes(keyword.toLowerCase()) ||
-                           (job.company_name || '').toLowerCase().includes(keyword.toLowerCase());
-      const matchLocation = (job.job_location || '').toLowerCase().includes(location.toLowerCase());
-      const matchExperience = experience === '' || job.experience_level === experience;
-      const matchRoleType = roleType === '' || job.role_type === roleType;
-      const matchPayGrade = payGrade === '' || job.pay_grade === payGrade;
+  function applyFiltersAndSort(list, kw, loc, exp, jt, pg, sort) {
+    let results = list.filter(job => {
+      const matchKeyword = (job.job_title || '').toLowerCase().includes(kw.toLowerCase()) ||
+                           (job.company_name || '').toLowerCase().includes(kw.toLowerCase());
+      const matchLocation = (job.job_location || '').toLowerCase().includes(loc.toLowerCase());
+      const matchExperience = exp === '' || job.experience_level === exp;
+      const matchJobType = jt === '' || job.job_type === jt || job.role_type === jt;
+      const matchPayGrade = pg === '' || job.pay_grade === pg;
 
-      return matchKeyword && matchLocation && matchExperience && matchRoleType && matchPayGrade;
+      return matchKeyword && matchLocation && matchExperience && matchJobType && matchPayGrade;
+    });
+
+    results.sort((a, b) => {
+      if (sort === 'oldest') {
+        return (a.job_id || 0) - (b.job_id || 0);
+      } else if (sort === 'title') {
+        return (a.job_title || '').localeCompare(b.job_title || '');
+      } else {
+        // Default 'newest'
+        return (b.job_id || 0) - (a.job_id || 0);
+      }
     });
 
     setFilteredJobs(results);
     setCurrentPage(1);
+  }
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    applyFiltersAndSort(jobs, keyword, location, experience, jobType, payGrade, sortBy);
+  };
+
+  const handleSortChange = (e) => {
+    const newSort = e.target.value;
+    setSortBy(newSort);
+    applyFiltersAndSort(jobs, keyword, location, experience, jobType, payGrade, newSort);
   };
 
   const clearFilters = () => {
     setKeyword('');
     setLocation('');
     setExperience('');
-    setRoleType('');
+    setJobType('');
     setPayGrade('');
-    setFilteredJobs(jobs);
-    setCurrentPage(1);
+    setSortBy('newest');
+    applyFiltersAndSort(jobs, '', '', '', '', '', 'newest');
   };
 
   // Pagination calculations
@@ -101,11 +122,12 @@ const Jobs = () => {
             <option value="5+ Years">5+ Years</option>
           </select>
           
-          <select value={roleType} onChange={(e) => setRoleType(e.target.value)} className="form-select">
-            <option value="">Role Type (FT, PT) ▾</option>
+          <select value={jobType} onChange={(e) => setJobType(e.target.value)} className="form-select">
+            <option value="">Job Type ▾</option>
             <option value="Full-Time">Full-Time</option>
             <option value="Part-Time">Part-Time</option>
             <option value="Co-op">Co-op</option>
+            <option value="Contract">Contract</option>
           </select>
           
           <select value={payGrade} onChange={(e) => setPayGrade(e.target.value)} className="form-select">
@@ -114,6 +136,12 @@ const Jobs = () => {
             <option value="Grade 2">Grade 2</option>
             <option value="Grade 3">Grade 3</option>
             <option value="Grade 4">Grade 4</option>
+          </select>
+
+          <select value={sortBy} onChange={handleSortChange} className="form-select">
+            <option value="newest">Sort: Newest First ▾</option>
+            <option value="oldest">Sort: Oldest First ▾</option>
+            <option value="title">Sort: Title (A-Z) ▾</option>
           </select>
 
           <button type="submit" className="primary-btn">Search Jobs</button>

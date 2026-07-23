@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { api } from '../api/apiClient.js';
 import "../styles/job.css";
+import "../styles/adminDashboard.css";
 
 const EmployerDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -113,16 +114,27 @@ const EmployerDashboard = () => {
     }
   };
 
+  const handleDeleteJob = async (jobId, jobTitle) => {
+    if (!window.confirm(`Are you sure you want to permanently delete job posting "${jobTitle}"? This will also remove any candidate applications associated with it.`)) {
+      return;
+    }
+    try {
+      await api.delete(`/api/jobs/permanent/${jobId}`);
+      fetchEmployerData();
+    } catch (err) {
+      alert(`Error deleting job: ${err.message}`);
+    }
+  };
+
   const handleOpenEditModal = (job) => {
     setEditingJob(job);
     setEditFormData({
       title: job.job_title || '',
       location: job.job_location || '',
-      workType: job.work_type || 'Hybrid',
-      jobType: job.job_type || 'FullTime',
-      roleType: job.role_type || 'Full-Time',
+      workType: job.work_type || 'Remote',
+      jobType: job.job_type || 'Full-Time',
       payGrade: job.pay_grade || 'Grade 1',
-      experienceLevel: job.experience_level || 'Mid-Level',
+      experienceLevel: job.experience_level || 'Entry Level',
       description: job.job_description || '',
       requirements: job.requirements || '',
       responsibilities: job.responsibilities || '',
@@ -351,34 +363,13 @@ const EmployerDashboard = () => {
                       </div>
                       
                       {/* Action Buttons for Recent Applicant */}
-                      <div style={{ display: 'flex', gap: '0.4rem', width: '100%', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', gap: '0.4rem', width: '100%', justifyContent: 'flex-end' }}>
                         <button 
                           className="primary-btn"
-                          style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem' }}
+                          style={{ padding: '0.35rem 0.75rem', fontSize: '0.85rem' }}
                           onClick={() => setSelectedAppForReview(app)}
                         >
                           📄 Review Resume
-                        </button>
-                        <button 
-                          className="secondary-btn" 
-                          style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', color: '#16a34a', borderColor: '#86efac', backgroundColor: app.status?.toLowerCase() === 'accepted' ? '#dcfce7' : '' }}
-                          onClick={() => handleUpdateStatus(app.app_id, 'accepted')}
-                        >
-                          Accept
-                        </button>
-                        <button 
-                          className="secondary-btn" 
-                          style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', color: '#2563eb', borderColor: '#93c5fd', backgroundColor: app.status?.toLowerCase() === 'interview' ? '#dbeafe' : '' }}
-                          onClick={() => handleUpdateStatus(app.app_id, 'interview')}
-                        >
-                          Interview
-                        </button>
-                        <button 
-                          className="secondary-btn" 
-                          style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem', color: '#dc2626', borderColor: '#fca5a5', backgroundColor: app.status?.toLowerCase() === 'rejected' ? '#fee2e2' : '' }}
-                          onClick={() => handleUpdateStatus(app.app_id, 'rejected')}
-                        >
-                          Reject
                         </button>
                       </div>
                     </div>
@@ -448,7 +439,7 @@ const EmployerDashboard = () => {
                         {job.job_status?.toLowerCase() !== 'closed' ? (
                           <button 
                             className="secondary-btn"
-                            style={{ padding: '0.35rem 0.75rem', fontSize: '0.85rem', color: '#dc2626', borderColor: '#fca5a5' }}
+                            style={{ padding: '0.35rem 0.75rem', fontSize: '0.85rem', color: '#d97706', borderColor: '#fde68a' }}
                             onClick={() => handleCloseJob(job.job_id)}
                           >
                             Close Job
@@ -462,6 +453,13 @@ const EmployerDashboard = () => {
                             Reopen Job
                           </button>
                         )}
+                        <button 
+                          className="secondary-btn"
+                          style={{ padding: '0.35rem 0.75rem', fontSize: '0.85rem', color: '#dc2626', borderColor: '#fca5a5', backgroundColor: '#fef2f2' }}
+                          onClick={() => handleDeleteJob(job.job_id, job.job_title)}
+                        >
+                          🗑️ Delete
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -540,6 +538,19 @@ const EmployerDashboard = () => {
                             onClick={() => setSelectedAppForReview(app)}
                           >
                             📄 Review Resume
+                          </button>
+                          <button 
+                            className="secondary-btn"
+                            style={{ 
+                              padding: '0.3rem 0.6rem', 
+                              fontSize: '0.8rem', 
+                              color: '#d97706', 
+                              borderColor: '#fde68a',
+                              backgroundColor: app.status?.toLowerCase() === 'under review' ? '#fef3c7' : '' 
+                            }}
+                            onClick={() => handleUpdateStatus(app.app_id, 'under review')}
+                          >
+                            Under Review
                           </button>
                           <button 
                             className="secondary-btn"
@@ -669,6 +680,13 @@ const EmployerDashboard = () => {
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button 
                   className="secondary-btn" 
+                  style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', color: '#d97706', borderColor: '#fde68a', backgroundColor: selectedAppForReview.status?.toLowerCase() === 'under review' ? '#fef3c7' : '' }}
+                  onClick={() => handleUpdateStatus(selectedAppForReview.app_id, 'under review')}
+                >
+                  Under Review
+                </button>
+                <button 
+                  className="secondary-btn" 
                   style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', color: '#16a34a', borderColor: '#86efac', backgroundColor: selectedAppForReview.status?.toLowerCase() === 'accepted' ? '#dcfce7' : '' }}
                   onClick={() => handleUpdateStatus(selectedAppForReview.app_id, 'accepted')}
                 >
@@ -703,120 +721,171 @@ const EmployerDashboard = () => {
 
       {/* Edit Job Posting Modal */}
       {editingJob && (
-        <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '650px', width: '90%', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h2 className="modal-title" style={{ marginBottom: '1rem' }}>Edit Job Posting</h2>
-            
-            <form onSubmit={handleSaveEditJob} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              
-              <div className="form-group">
-                <label style={{ display: 'block', fontWeight: '600', marginBottom: '0.25rem', fontSize: '0.9rem' }}>Job Title</label>
+        <div className="admin-modal-overlay" onClick={() => setEditingJob(null)}>
+          <div className="admin-modal-card" onClick={e => e.stopPropagation()}>
+            <div className="admin-modal-header">
+              <h2>Edit Job Posting #{editingJob.job_id}</h2>
+              <button className="admin-modal-close" onClick={() => setEditingJob(null)}>✕</button>
+            </div>
+
+            <form onSubmit={handleSaveEditJob} className="admin-modal-form">
+              <label>
+                Job Title
                 <input 
                   type="text" 
                   value={editFormData.title} 
                   onChange={e => setEditFormData({ ...editFormData, title: e.target.value })}
                   required 
-                  style={{ width: '100%', padding: '0.5rem', borderRadius: '0.375rem', border: '1px solid #cbd5e1' }}
                 />
-              </div>
+              </label>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div className="form-group">
-                  <label style={{ display: 'block', fontWeight: '600', marginBottom: '0.25rem', fontSize: '0.9rem' }}>Job Location</label>
+              <div className="admin-modal-row">
+                <label>
+                  Location
                   <input 
                     type="text" 
                     value={editFormData.location} 
                     onChange={e => setEditFormData({ ...editFormData, location: e.target.value })}
                     required 
-                    style={{ width: '100%', padding: '0.5rem', borderRadius: '0.375rem', border: '1px solid #cbd5e1' }}
                   />
-                </div>
-                <div className="form-group">
-                  <label style={{ display: 'block', fontWeight: '600', marginBottom: '0.25rem', fontSize: '0.9rem' }}>Pay Grade / Salary</label>
-                  <input 
-                    type="text" 
-                    value={editFormData.payGrade} 
-                    onChange={e => setEditFormData({ ...editFormData, payGrade: e.target.value })}
-                    style={{ width: '100%', padding: '0.5rem', borderRadius: '0.375rem', border: '1px solid #cbd5e1' }}
-                  />
-                </div>
-              </div>
+                </label>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
-                <div className="form-group">
-                  <label style={{ display: 'block', fontWeight: '600', marginBottom: '0.25rem', fontSize: '0.9rem' }}>Work Type</label>
-                  <select 
-                    value={editFormData.workType} 
-                    onChange={e => setEditFormData({ ...editFormData, workType: e.target.value })}
-                    style={{ width: '100%', padding: '0.5rem', borderRadius: '0.375rem', border: '1px solid #cbd5e1' }}
-                  >
-                    <option value="Hybrid">Hybrid</option>
-                    <option value="Onsite">Onsite</option>
-                    <option value="Remote">Remote</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label style={{ display: 'block', fontWeight: '600', marginBottom: '0.25rem', fontSize: '0.9rem' }}>Role Type</label>
-                  <select 
-                    value={editFormData.roleType} 
-                    onChange={e => setEditFormData({ ...editFormData, roleType: e.target.value })}
-                    style={{ width: '100%', padding: '0.5rem', borderRadius: '0.375rem', border: '1px solid #cbd5e1' }}
-                  >
-                    <option value="Full-Time">Full-Time</option>
-                    <option value="Part-Time">Part-Time</option>
-                    <option value="Contract">Contract</option>
-                    <option value="Internship">Internship</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label style={{ display: 'block', fontWeight: '600', marginBottom: '0.25rem', fontSize: '0.9rem' }}>Status</label>
+                <label>
+                  Status
                   <select 
                     value={editFormData.status} 
                     onChange={e => setEditFormData({ ...editFormData, status: e.target.value })}
-                    style={{ width: '100%', padding: '0.5rem', borderRadius: '0.375rem', border: '1px solid #cbd5e1' }}
                   >
-                    <option value="open">Open</option>
+                    <option value="open">Open (Hiring)</option>
                     <option value="closed">Closed</option>
                   </select>
-                </div>
+                </label>
               </div>
 
-              <div className="form-group">
-                <label style={{ display: 'block', fontWeight: '600', marginBottom: '0.25rem', fontSize: '0.9rem' }}>Job Description</label>
+              <div className="admin-modal-row">
+                <label>
+                  Work Type
+                  <select 
+                    value={editFormData.workType} 
+                    onChange={e => setEditFormData({ ...editFormData, workType: e.target.value })}
+                  >
+                    <option value="Remote">Remote</option>
+                    <option value="On-site">On-site</option>
+                    <option value="Hybrid">Hybrid</option>
+                  </select>
+                </label>
+
+                <label>
+                  Job Type
+                  <select 
+                    value={editFormData.jobType} 
+                    onChange={e => setEditFormData({ ...editFormData, jobType: e.target.value })}
+                  >
+                    <option value="Full-Time">Full-Time</option>
+                    <option value="Part-Time">Part-Time</option>
+                    <option value="Co-op">Co-op</option>
+                    <option value="Contract">Contract</option>
+                  </select>
+                </label>
+              </div>
+
+              <div className="admin-modal-row">
+                <label>
+                  Experience Level
+                  <select 
+                    value={editFormData.experienceLevel} 
+                    onChange={e => setEditFormData({ ...editFormData, experienceLevel: e.target.value })}
+                  >
+                    <option value="Entry Level">Entry Level</option>
+                    <option value="3+ Years">3+ Years</option>
+                    <option value="5+ Years">5+ Years</option>
+                  </select>
+                </label>
+
+                <label>
+                  Pay Grade
+                  <select 
+                    value={editFormData.payGrade} 
+                    onChange={e => setEditFormData({ ...editFormData, payGrade: e.target.value })}
+                  >
+                    <option value="Grade 1">Grade 1</option>
+                    <option value="Grade 2">Grade 2</option>
+                    <option value="Grade 3">Grade 3</option>
+                    <option value="Grade 4">Grade 4</option>
+                  </select>
+                </label>
+              </div>
+
+              <label>
+                Description
                 <textarea 
                   value={editFormData.description} 
                   onChange={e => setEditFormData({ ...editFormData, description: e.target.value })}
-                  rows="4" 
+                  rows="3" 
                   required 
-                  style={{ width: '100%', padding: '0.5rem', borderRadius: '0.375rem', border: '1px solid #cbd5e1' }}
                 />
-              </div>
+              </label>
 
-              <div className="form-group">
-                <label style={{ display: 'block', fontWeight: '600', marginBottom: '0.25rem', fontSize: '0.9rem' }}>Requirements</label>
+              <label>
+                Requirements
                 <textarea 
                   value={editFormData.requirements} 
                   onChange={e => setEditFormData({ ...editFormData, requirements: e.target.value })}
-                  rows="3" 
-                  style={{ width: '100%', padding: '0.5rem', borderRadius: '0.375rem', border: '1px solid #cbd5e1' }}
+                  rows="2" 
                 />
-              </div>
+              </label>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
+              <label>
+                Responsibilities
+                <textarea 
+                  value={editFormData.responsibilities} 
+                  onChange={e => setEditFormData({ ...editFormData, responsibilities: e.target.value })}
+                  rows="2" 
+                />
+              </label>
+
+              <label>
+                Benefits
+                <textarea 
+                  value={editFormData.benefits} 
+                  onChange={e => setEditFormData({ ...editFormData, benefits: e.target.value })}
+                  rows="2" 
+                />
+              </label>
+
+              <div className="admin-modal-actions" style={{ justifyContent: 'space-between' }}>
                 <button 
                   type="button" 
-                  className="cancel-btn"
-                  onClick={() => setEditingJob(null)}
+                  className="admin-action-btn"
+                  style={{ color: '#dc2626', borderColor: '#fca5a5', backgroundColor: '#fef2f2' }}
+                  onClick={() => {
+                    const jId = editingJob.job_id;
+                    const jTitle = editingJob.job_title;
+                    setEditingJob(null);
+                    handleDeleteJob(jId, jTitle);
+                  }}
                 >
-                  Cancel
+                  🗑️ Delete Job
                 </button>
-                <button 
-                  type="submit" 
-                  className="primary-btn" 
-                  disabled={savingEdit}
-                >
-                  {savingEdit ? 'Saving...' : 'Save Job Updates'}
-                </button>
+
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <button 
+                    type="button" 
+                    className="admin-action-btn"
+                    onClick={() => setEditingJob(null)}
+                    disabled={savingEdit}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="common-button" 
+                    style={{ padding: "0.6rem 1.5rem" }}
+                    disabled={savingEdit}
+                  >
+                    {savingEdit ? 'Saving...' : 'Save Job Posting'}
+                  </button>
+                </div>
               </div>
 
             </form>

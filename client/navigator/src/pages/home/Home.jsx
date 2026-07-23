@@ -197,8 +197,8 @@ function Home() {
                                             <h4 className="saved-job-title">{app.candidate_name}</h4>
                                             <p className="saved-company">{app.job_title}</p>
                                         </div>
-                                        <span style={{ fontSize: '0.8rem', fontWeight: '600', color: '#2563eb' }}>
-                                            {app.status}
+                                        <span className={`status-badge ${(app.status || 'applied').toLowerCase().replace(' ', '-')}`} style={{ fontSize: '0.8rem' }}>
+                                            {app.status || 'Applied'}
                                         </span>
                                     </div>
                                 ))

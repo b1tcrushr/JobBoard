@@ -49,11 +49,28 @@ function ManageAccount() {
         api.get(`/api/users/${user.id}`)
           .then(uData => {
             if (uData) {
+              const uNameParts = (uData.name || "").trim().split(" ");
+              const uFirstName = uNameParts[0] || "";
+              const uLastName = uNameParts.slice(1).join(" ") || "";
               setFormData(prev => ({
                 ...prev,
+                firstName: uFirstName,
+                lastName: uLastName,
+                email: uData.email || "",
                 phone: uData.phone || "",
                 location: uData.location || ""
               }));
+
+              const currentToken = localStorage.getItem("token");
+              if (currentToken) {
+                login({
+                  ...user,
+                  name: uData.name || user.name,
+                  email: uData.email || user.email,
+                  phone: uData.phone || "",
+                  location: uData.location || ""
+                }, currentToken);
+              }
             }
           })
           .catch(() => {});

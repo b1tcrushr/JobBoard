@@ -8,6 +8,7 @@ router.get("/", getAllJobs);
 router.get("/stats", getJobStats);
 router.get("/admin/all", verifyToken, getAllJobsAdmin);
 router.delete("/admin/:job_id", verifyToken, deleteJobPermanently);
+router.delete("/permanent/:job_id", verifyToken, deleteJobPermanently);
 router.post("/employer", getJobByEmployer);
 router.get("/employer/:employer_id", getJobByEmployer);
 router.get("/:id", getJobById);
