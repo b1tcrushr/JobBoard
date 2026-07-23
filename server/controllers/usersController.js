@@ -59,6 +59,15 @@ async function createUser(req, res) {
     }
 
     try {
+        if (role === "admin") {
+            const [adminRows] = await db.query("SELECT COUNT(*) AS count FROM users WHERE LOWER(role) = 'admin'");
+            const adminCount = adminRows[0].count;
+            if (adminCount > 0 && req.user?.role !== "admin") {
+                return res.status(400).json({
+                    error: "An admin account already exists. New accounts can only be created as employer or candidate."
+                });
+            }
+        }
         //check if email in use
         const [existing] = await db.query("SELECT user_id FROM users WHERE email = ?", [email]);
         if (existing.length > 0) {
@@ -315,4 +324,14 @@ async function deleteUser(req, res) {
     }
 }
 
-module.exports = { getAllUsers, getUsersById, createUser, loginUser, updateUser, deleteUser };
+async function checkAdminExists(req, res) {
+    try {
+        const [rows] = await db.query("SELECT COUNT(*) AS count FROM users WHERE LOWER(role) = 'admin'");
+        const adminCount = rows[0].count;
+        res.json({ adminExists: adminCount > 0, count: adminCount });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+}
+
+module.exports = { getAllUsers, getUsersById, createUser, loginUser, updateUser, deleteUser, checkAdminExists };

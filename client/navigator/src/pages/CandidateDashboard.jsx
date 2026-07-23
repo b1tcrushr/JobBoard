@@ -209,12 +209,23 @@ const CandidateDashboard = () => {
                           {job.company_name || job.company}{job.job_location || job.location ? ` • ${job.job_location || job.location}` : ''}
                         </p>
                       </div>
-                      <button 
-                        className="primary-btn"
-                        onClick={() => navigate(`/jobs/${job.job_id || job.id}`)}
-                      >
-                        Apply
-                      </button>
+                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <button 
+                          className="primary-btn"
+                          style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem' }}
+                          onClick={() => navigate(`/jobs/${job.job_id || job.id}`)}
+                        >
+                          Apply
+                        </button>
+                        <button 
+                          className="secondary-btn"
+                          style={{ color: '#ef4444', borderColor: '#fca5a5', padding: '0.4rem 0.85rem', fontSize: '0.85rem' }}
+                          onClick={() => handleRemoveSaved(job.job_id || job.id)}
+                          title="Unfavourite Job"
+                        >
+                          Unfavourite
+                        </button>
+                      </div>
                     </div>
                   ))
                 ) : (
@@ -303,8 +314,9 @@ const CandidateDashboard = () => {
                       className="secondary-btn"
                       style={{ color: '#ef4444', borderColor: '#fca5a5' }}
                       onClick={() => handleRemoveSaved(job.job_id || job.id)}
+                      title="Unfavourite Job"
                     >
-                      Remove
+                      Unfavourite
                     </button>
                   </div>
                 </div>

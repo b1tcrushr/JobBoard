@@ -3,6 +3,15 @@ const db = require("../db");
 const ROLE_TYPES = ["Full-Time", "Part-Time", "Co-op"];
 const PAY_GRADES = ["Grade 1", "Grade 2", "Grade 3", "Grade 4"];
 
+async function ensureJobColumns() {
+    try {
+        await db.query("ALTER TABLE job_postings MODIFY COLUMN experience_level VARCHAR(255)");
+    } catch (e) {
+        // Table or column alter already handled
+    }
+}
+ensureJobColumns();
+
 async function getAllJobs(req, res) {
     try {
         const [rows] = await db.query(

@@ -55,7 +55,7 @@ export default function AdminDashboard() {
     workType: "Remote",
     jobType: "Full-Time",
     status: "open",
-    roleType: "Full-Time",
+    experienceLevel: "Entry Level",
     payGrade: "Grade 1",
     description: "",
     requirements: "",
@@ -86,7 +86,7 @@ export default function AdminDashboard() {
     work_type: "Remote",
     job_type: "Full-Time",
     job_status: "open",
-    role_type: "Full-Time",
+    experience_level: "Entry Level",
     pay_grade: "Grade 1",
     job_description: "",
     requirements: "",
@@ -267,7 +267,7 @@ export default function AdminDashboard() {
         job_type: createJobForm.job_type,
         job_description: createJobForm.job_description,
         job_status: createJobForm.job_status,
-        role_type: createJobForm.role_type,
+        experience_level: createJobForm.experience_level,
         pay_grade: createJobForm.pay_grade,
         requirements: createJobForm.requirements,
         responsibilities: createJobForm.responsibilities,
@@ -284,7 +284,7 @@ export default function AdminDashboard() {
         work_type: "Remote",
         job_type: "Full-Time",
         job_status: "open",
-        role_type: "Full-Time",
+        experience_level: "Entry Level",
         pay_grade: "Grade 1",
         job_description: "",
         requirements: "",
@@ -396,7 +396,7 @@ export default function AdminDashboard() {
       workType: jobToEdit.work_type || "Remote",
       jobType: jobToEdit.job_type || "Full-Time",
       status: jobToEdit.job_status || "open",
-      roleType: jobToEdit.role_type || "Full-Time",
+      experienceLevel: jobToEdit.experience_level || "Entry Level",
       payGrade: jobToEdit.pay_grade || "Grade 1",
       description: jobToEdit.job_description || "",
       requirements: jobToEdit.requirements || "",
@@ -423,7 +423,7 @@ export default function AdminDashboard() {
             work_type: jobForm.workType,
             job_type: jobForm.jobType,
             job_status: jobForm.status,
-            role_type: jobForm.roleType,
+            experience_level: jobForm.experienceLevel,
             pay_grade: jobForm.payGrade,
             job_description: jobForm.description,
             requirements: jobForm.requirements,
@@ -1205,14 +1205,14 @@ export default function AdminDashboard() {
 
               <div className="admin-modal-row">
                 <label>
-                  Role Type
+                  Experience Level
                   <select
-                    value={createJobForm.role_type}
-                    onChange={e => setCreateJobForm({ ...createJobForm, role_type: e.target.value })}
+                    value={createJobForm.experience_level}
+                    onChange={e => setCreateJobForm({ ...createJobForm, experience_level: e.target.value })}
                   >
-                    <option value="Full-Time">Full-Time</option>
-                    <option value="Part-Time">Part-Time</option>
-                    <option value="Co-op">Co-op</option>
+                    <option value="Entry Level">Entry Level</option>
+                    <option value="3+ Years">3+ Years</option>
+                    <option value="5+ Years">5+ Years</option>
                   </select>
                 </label>
 
@@ -1536,14 +1536,14 @@ export default function AdminDashboard() {
 
               <div className="admin-modal-row">
                 <label>
-                  Role Type
+                  Experience Level
                   <select
-                    value={jobForm.roleType}
-                    onChange={e => setJobForm({ ...jobForm, roleType: e.target.value })}
+                    value={jobForm.experienceLevel}
+                    onChange={e => setJobForm({ ...jobForm, experienceLevel: e.target.value })}
                   >
-                    <option value="Full-Time">Full-Time</option>
-                    <option value="Part-Time">Part-Time</option>
-                    <option value="Co-op">Co-op</option>
+                    <option value="Entry Level">Entry Level</option>
+                    <option value="3+ Years">3+ Years</option>
+                    <option value="5+ Years">5+ Years</option>
                   </select>
                 </label>
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import "../styles/job.css";
-import { saveJob } from "../hooks/savedJobs";
+import { saveJob, isJobSaved, removeSavedJob } from "../hooks/savedJobs";
 import { api } from '../api/apiClient';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -26,6 +26,9 @@ const JobDetails = () => {
     ])
       .then(([job, userApps]) => {
         setJobData(job);
+        if (isJobSaved(jobId)) {
+          setSaved(true);
+        }
         if (Array.isArray(userApps) && userApps.some(a => a.job_id === jobId)) {
           setHasApplied(true);
         }
@@ -43,8 +46,13 @@ const JobDetails = () => {
       setShowAuthModal(true);
       return;
     }
-    saveJob({ job_id: jobData.job_id, job_title: jobData.job_title, company_name: jobData.company_name });
-    setSaved(true);
+    if (saved) {
+      removeSavedJob(jobData.job_id);
+      setSaved(false);
+    } else {
+      saveJob({ job_id: jobData.job_id, job_title: jobData.job_title, company_name: jobData.company_name, job_location: jobData.job_location });
+      setSaved(true);
+    }
   };
 
   const handleApplyClick = () => {
@@ -102,7 +110,21 @@ const JobDetails = () => {
       <div className="header-card">
         <div>
           <h1 className="job-title-main">{jobData.job_title}</h1>
-          <p className="job-subtitle">{jobData.company_name} • {jobData.job_location}</p>
+          <p className="job-subtitle">{jobData.company_name} • {jobData.job_location || "Remote"}</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.75rem' }}>
+            <span style={{ backgroundColor: '#eff6ff', color: '#1d4ed8', padding: '0.3rem 0.75rem', borderRadius: '9999px', fontSize: '0.85rem', fontWeight: '600' }}>
+              💻 {jobData.work_type || "Remote"}
+            </span>
+            <span style={{ backgroundColor: '#f0fdf4', color: '#15803d', padding: '0.3rem 0.75rem', borderRadius: '9999px', fontSize: '0.85rem', fontWeight: '600' }}>
+              ⏰ {jobData.job_type || "Full-Time"}
+            </span>
+            <span style={{ backgroundColor: '#fef3c7', color: '#b45309', padding: '0.3rem 0.75rem', borderRadius: '9999px', fontSize: '0.85rem', fontWeight: '600' }}>
+              🎯 {jobData.experience_level || "Entry Level"}
+            </span>
+            <span style={{ backgroundColor: '#f3e8ff', color: '#6b21a8', padding: '0.3rem 0.75rem', borderRadius: '9999px', fontSize: '0.85rem', fontWeight: '600' }}>
+              💵 {jobData.pay_grade || "Grade 1"}
+            </span>
+          </div>
         </div>
         <div className="header-actions">
           {isClosed ? (
@@ -122,8 +144,13 @@ const JobDetails = () => {
               ) : (
                 <button className="primary-btn" onClick={handleApplyClick}>Apply Now</button>
               )}
-              <button className="secondary-btn" onClick={handleSaveClick} disabled={saved}>
-                {saved ? "✓ Saved" : "★ Save Job"}
+              <button 
+                className="secondary-btn" 
+                onClick={handleSaveClick}
+                style={saved ? { backgroundColor: '#fff1f2', color: '#e11d48', borderColor: '#fecdd3' } : {}}
+                title={saved ? "Click to Unfavourite" : "Save Job"}
+              >
+                {saved ? "❤️ Favourited" : "★ Save Job"}
               </button>
             </>
           )}
@@ -137,27 +164,43 @@ const JobDetails = () => {
         <div className="main-column">
           <section>
             <h2 className="section-heading">Job Description</h2>
-            <p className="paragraph">{jobData.job_description}</p>
+            <p className="paragraph" style={{ whiteSpace: 'pre-wrap' }}>{jobData.job_description}</p>
           </section>
 
-          <section>
-            <h2 className="section-heading">Requirements</h2>
-            <p className="paragraph">{jobData.requirements}</p>
-          </section>
+          {jobData.requirements && (
+            <section>
+              <h2 className="section-heading">Requirements</h2>
+              <p className="paragraph" style={{ whiteSpace: 'pre-wrap' }}>{jobData.requirements}</p>
+            </section>
+          )}
 
-          <section>
-            <h2 className="section-heading">Roles & Responsibilities</h2>
-            <p className="paragraph">{jobData.responsibilities}</p>
-          </section>
+          {jobData.responsibilities && (
+            <section>
+              <h2 className="section-heading">Roles & Responsibilities</h2>
+              <p className="paragraph" style={{ whiteSpace: 'pre-wrap' }}>{jobData.responsibilities}</p>
+            </section>
+          )}
         </div>
 
         {/* Right Column: Sidebar */}
         <div className="sidebar-column">
 
+          {/* Job Snapshot */}
+          <div className="sidebar-card">
+            <h3 className="sidebar-heading">Job Overview</h3>
+            <div className="company-meta">
+              <p><strong>Job Type:</strong> {jobData.job_type || "Full-Time"}</p>
+              <p><strong>Work Setup:</strong> {jobData.work_type || "Remote"}</p>
+              <p><strong>Experience Level:</strong> {jobData.experience_level || "Entry Level"}</p>
+              <p><strong>Location:</strong> {jobData.job_location || "Remote"}</p>
+              <p><strong>Pay Grade:</strong> {jobData.pay_grade || "Grade 1"}</p>
+            </div>
+          </div>
+
           <div className="sidebar-card-green">
             <h3 className="sidebar-heading">Salary & Benefits</h3>
-            <p className="salary-text">{jobData.pay_grade}</p>
-            <p className="paragraph">{jobData.benefits}</p>
+            <p className="salary-text">{jobData.pay_grade || "Grade 1"}</p>
+            <p className="paragraph" style={{ whiteSpace: 'pre-wrap' }}>{jobData.benefits || "Competitive compensation package."}</p>
           </div>
 
           <div className="sidebar-card">
